@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinns API</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+
+body{
+  margin:0;
+  background:linear-gradient(-45deg,#0f172a,#1e1b4b,#0f172a,#1e293b);
+  background-size:400% 400%;
+  animation:bgMove 18s ease infinite;
+  color:white;
+}
+
+@keyframes bgMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+.header{
+  text-align:center;
+  padding:25px;
+  font-size:26px;
+  font-weight:600;
+}
+
+.api-key-box{padding:0 15px 10px}
+
+.category-scroll{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  padding:10px 15px 20px;
+}
+
+.category-btn{
+  padding:10px 18px;
+  border-radius:25px;
+  background:#1e293b;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.category-btn.active{
+  background:linear-gradient(90deg,#8b5cf6,#6366f1);
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(167,139,250,0.2);
+  background:#0f172a;
+  color:white;
+  margin-bottom:12px;
+}
+
+.container{padding:0 15px 40px}
+
+.card{
+  background:#1e293b;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:14px;
+  transition:.25s;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 25px rgba(139,92,246,.4);
+}
+
+.badge{
+  color:#22c55e;
+  border:1px solid #22c55e;
+  padding:4px 10px;
+  border-radius:10px;
+  font-size:12px;
+  margin-bottom:10px;
+  display:inline-block;
+}
+
+.btn{
+  background:linear-gradient(90deg,#8b5cf6,#6366f1);
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  width:100%;
+}
+
+.code{
+  background:#0f172a;
+  padding:15px;
+  border-radius:12px;
+  font-size:12px;
+  margin-top:12px;
+  white-space:pre-wrap;
+}
+
+.desc{
+  color:#cbd5e1;
+  font-size:14px;
+  margin-top:6px;
+}
+
+.hidden{display:none}
+.back{cursor:pointer;margin-bottom:15px;color:#a78bfa}
+</style>
+</head>
+
+<body>
+
+<div class="header">Dinns API</div>
+
+<div class="api-key-box">
+  <input id="globalKey" placeholder="Global API Key">
+  <input id="searchBox" placeholder="Search endpoint...">
+</div>
+
+<div class="category-scroll" id="categoryScroll"></div>
+
+<div class="container">
+  <div id="listView"></div>
+  <div id="detailView" class="hidden"></div>
+</div>
+
+<script>
+
+/* ===== CONFIG ENDPOINT ===== */
+
+const apiConfig = {
+
+  drama:{
+    search:{desc:"Cari drama berdasarkan judul",params:["q"]},
+    episode:{desc:"Ambil daftar episode drama",params:["id"]}
+  },
+
+  tools:{
+    unban:{desc:"Unban nomor WhatsApp",params:["number"]},
+    ssweb:{desc:"Screenshot website",params:["url"]}
+  },
+
+  ai:{
+    chat:{desc:"AI chat sederhana",params:["q"]}
+  },
+
+  download:{
+    tiktok:{desc:"Download video TikTok",params:["url"]}
+  },
+
+  anime:{
+    search:{desc:"Cari anime berdasarkan judul",params:["q"]}
+  }
+
+};
+
+let currentCategory="all";
+let searchText="";
+
+/* SAVE API KEY */
+
+const savedKey=localStorage.getItem("apikey");
+if(savedKey) globalKey.value=savedKey;
+
+globalKey.oninput=e=>{
+  localStorage.setItem("apikey",e.target.value);
+};
+
+/* SEARCH */
+
+searchBox.oninput=e=>{
+  searchText=e.target.value.toLowerCase();
+  renderList(currentCategory);
+};
+
+/* COPY */
+
+function copyText(text){
+  navigator.clipboard.writeText(text);
+  alert("Copied!");
+}
+
+/* CATEGORY BUTTON */
+
+function generateCategories(){
+
+  const allBtn=createBtn("ALL","all");
+  allBtn.classList.add("active");
+  categoryScroll.appendChild(allBtn);
+
+  for(const c in apiConfig){
+    categoryScroll.appendChild(createBtn(c.toUpperCase(),c));
+  }
+}
+
+function createBtn(text,val){
+  const btn=document.createElement("div");
+  btn.className="category-btn";
+  btn.innerText=text;
+  btn.onclick=()=>selectCategory(val,btn);
+  return btn;
+}
+
+function selectCategory(cat,el){
+  document.querySelectorAll(".category-btn")
+    .forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  currentCategory=cat;
+  renderList(cat);
+}
+
+/* LIST */
+
+function renderList(filter="all"){
+
+  listView.innerHTML="";
+  detailView.classList.add("hidden");
+  listView.classList.remove("hidden");
+
+  for(const c in apiConfig){
+
+    if(filter!=="all" && c!==filter) continue;
+
+    for(const ep in apiConfig[c]){
+
+      const data=apiConfig[c][ep];
+      const name=(c+" "+ep).toLowerCase();
+
+      if(searchText && !name.includes(searchText)) continue;
+
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`
+        <div class="badge">GET</div>
+        <div><b>${c} / ${ep}</b></div>
+        <div class="desc">${data.desc}</div>
+      `;
+      card.onclick=()=>openDetail(c,ep);
+
+      listView.appendChild(card);
+    }
+  }
+}
+
+/* DETAIL */
+
+function openDetail(c,ep){
+
+  listView.classList.add("hidden");
+  detailView.classList.remove("hidden");
+
+  const data=apiConfig[c][ep];
+
+  detailView.innerHTML=`
+    <div class="card">
+      <div class="back" onclick="renderList('${currentCategory}')">← Back</div>
+
+      <h2>${c} / ${ep}</h2>
+      <div class="desc">${data.desc}</div>
+
+      <div id="formArea"></div>
+
+      <button class="btn" onclick="executeRequest('${c}','${ep}')">
+        Execute
+      </button>
+
+      <div id="resultArea"></div>
+    </div>
+  `;
+
+  data.params.forEach(p=>{
+    const input=document.createElement("input");
+    input.placeholder=p;
+    input.id=p;
+    formArea.appendChild(input);
+  });
+}
+
+/* EXECUTE */
+
+async function executeRequest(c,ep){
+
+  const apikey=globalKey.value;
+  if(!apikey) return alert("API key required");
+
+  const data=apiConfig[c][ep];
+
+  let query=`?apikey=${encodeURIComponent(apikey)}&`;
+
+  data.params.forEach((p,i)=>{
+    query+=p+"="+encodeURIComponent(document.getElementById(p).value);
+    if(i<data.params.length-1) query+="&";
+  });
+
+  const url=`/api/${c}/${ep}${query}`;
+
+  const fetchCode =
+`fetch('${url}')
+  .then(res => res.json())
+  .then(data => console.log(data));`;
+
+  resultArea.innerHTML="Loading...";
+
+  try{
+
+    const res=await fetch(url);
+    const json=await res.json();
+
+    resultArea.innerHTML=`
+      <div class="code">
+<b>REQUEST</b>
+${fetchCode}
+<button onclick='copyText(\`${fetchCode}\`)'>Copy</button>
+      </div>
+
+      <div class="code">
+<b>RESPONSE</b>
+${JSON.stringify(json,null,2)}
+<button onclick='copyText(\`${JSON.stringify(json,null,2)}\`)'>Copy</button>
+      </div>
+    `;
+
+  }catch(e){
+    resultArea.innerHTML=`<div class="code">Error: ${e.message}</div>`;
+  }
+}
+
+/* INIT */
+
+generateCategories();
+renderList();
+
+</script>
+
+</body>
+</html>
