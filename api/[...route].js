@@ -68,14 +68,22 @@ export default async function handler(req, res) {
 
     if (category === "tools" && name === "unban") {
 
-      const { number } = req.query;
+  const { number } = req.query;
 
-      const r = await fetch(
-        `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=P5btAuX`
-      );
+  const r = await fetch(
+    `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=P5btAuX`
+  );
 
-      return res.json(await r.json());
-    }
+  const data = await r.json();
+
+  return res.json({
+    status: data.status,
+    author: "@dinns",
+    request_id: generateId(16), // 🔥 RANDOM ID
+    source: "Dinns",
+    data: data.data
+  });
+}
 
     // ======================
     // ❌ DEFAULT
