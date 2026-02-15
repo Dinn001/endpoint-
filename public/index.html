@@ -215,24 +215,45 @@ input:focus{
 const apiConfig = {
 
   drama:{
-    search:{desc:"Cari drama berdasarkan judul",params:["q"]},
-    episode:{desc:"Ambil daftar episode drama",params:["id"]}
+    search:{
+      desc:"Cari drama berdasarkan judul",
+      params:["q"]
+    },
+    episode:{
+      desc:"Ambil daftar episode drama",
+      params:["id"]
+    }
   },
 
   tools:{
-    unban:{desc:"Unban nomor WhatsApp",params:["number"]},
-    ssweb:{desc:"Screenshot website",params:["url"]}
+    unban:{
+      desc:"Unban nomor WhatsApp",
+      params:["number"]
+    },
+    ssweb:{
+      desc:"Screenshot website",
+      params:["url"]
+    }
   },
 
   ai:{
-    chat:{desc:"AI chat sederhana",params:["q"]},
-    cici:{desc:"AI Cici dari Anabot",params:["prompt"]}
+    chat:{
+      desc:"AI chat sederhana",
+      params:["q"]
+    },
+    cici:{
+      desc:"AI Cici dari Anabot",
+      params:["prompt"]
+    }
   },
+
   download:{
-  gdrive:{
-    desc:"Download file dari Google Drive",
-    params:["url"]}
+    gdrive:{
+      desc:"Download file dari Google Drive",
+      params:["url"]
+    }
   }
+
 };
 
 let currentCategory="all";
