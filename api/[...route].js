@@ -92,8 +92,11 @@ export default async function handler(req, res) {
 
   const originalImage = data.data.result;
 
-  const proxyImage =
-    `${req.headers.host}/api/image?url=${encodeURIComponent(originalImage)}`;
+// 🔥 encode URL jadi base64
+const encoded = Buffer.from(originalImage).toString("base64");
+
+const proxyImage =
+  `https://${req.headers.host}/api/image/${encoded}`;
 
   return res.json({
     success: true,
