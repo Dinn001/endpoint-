@@ -81,8 +81,7 @@ export default async function handler(req, res) {
     // ======================
     // 🛠 TOOLS UNBAN
     // ======================
-
-    if (category === "tools" && name === "unban") {
+if (category === "tools" && name === "unban") {
 
   const { number } = req.query;
 
@@ -91,12 +90,14 @@ export default async function handler(req, res) {
   );
 
   const data = await r.json();
-      delete data.data.messageId;
+
+  // 🔥 HAPUS messageId
+  delete data.data.messageId;
 
   return res.json({
     status: data.status,
     author: "@dinns",
-    request_id: generateId(16), // 🔥 RANDOM ID
+    request_id: generateId(16),
     source: "Dinns",
     data: data.data
   });
