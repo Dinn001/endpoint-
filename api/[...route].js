@@ -91,6 +91,7 @@ export default async function handler(req, res) {
   );
 
   const data = await r.json();
+      delete data.data.messageId;
 
   return res.json({
     status: data.status,
