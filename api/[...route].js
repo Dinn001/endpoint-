@@ -157,6 +157,39 @@ if (category === "tools" && name === "unban") {
 }
 
     // ======================
+// 📥 DOWNLOAD GDRIVE
+// ======================
+
+if (category === "download" && name === "gdrive") {
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: "url required" });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+
+  const result = data.data.result;
+
+  return res.json({
+    success: true,
+    author: "@dinns",
+    request_id: generateId(16),
+    source: "Dinnsstore",
+    file: {
+      name: result.name,
+      download: result.download,
+      original: result.link
+    }
+  });
+}
+
+    // ======================
     // ❌ DEFAULT
     // ======================
 
