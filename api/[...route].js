@@ -77,7 +77,31 @@ export default async function handler(req, res) {
 
       return res.json(await r.json());
     }
+// ======================
+    // 🛠 TOOLS SSWEB
+    // ======================
+    if (category === "tools" && name === "ssweb") {
 
+  const { url, device = "windows", fullPage = "off" } = req.query;
+
+  const r = await fetch(
+    `https://anabot.my.id/api/tools/ssweb?url=${encodeURIComponent(url)}&device=${encodeURIComponent(device)}&fullPage=${encodeURIComponent(fullPage)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+
+  const originalImage = data.data.result;
+
+  const proxyImage =
+    `${req.headers.host}/api/image?url=${encodeURIComponent(originalImage)}`;
+
+  return res.json({
+    success: true,
+    author: "@dinns",
+    request_id: generateId(16),
+    image: `https://${proxyImage}`
+  });
+    }
     // ======================
     // 🛠 TOOLS UNBAN
     // ======================
