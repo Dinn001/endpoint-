@@ -11,7 +11,7 @@
 
 body{
   margin:0;
-  background:linear-gradient(-45deg,#0f172a,#1e1b4b,#0f172a,#1e293b);
+  background:linear-gradient(-45deg,#0b1020,#1e1b4b,#0f172a,#020617);
   background-size:400% 400%;
   animation:bgMove 18s ease infinite;
   color:white;
@@ -25,55 +25,82 @@ body{
 
 .header{
   text-align:center;
-  padding:25px;
-  font-size:26px;
+  padding:28px;
+  font-size:28px;
   font-weight:600;
+  letter-spacing:.5px;
 }
 
-.api-key-box{padding:0 15px 10px}
+/* Inputs */
+
+.api-key-box{padding:0 16px 12px}
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(139,92,246,0.25);
+  background:#0b1220;
+  color:white;
+  margin-bottom:12px;
+  font-size:14px;
+  outline:none;
+  transition:.25s;
+}
+
+input:focus{
+  border-color:#8b5cf6;
+  box-shadow:0 0 0 2px rgba(139,92,246,.25);
+}
+
+/* Categories */
 
 .category-scroll{
   display:flex;
   gap:12px;
   overflow-x:auto;
-  padding:10px 15px 20px;
+  padding:10px 16px 22px;
 }
 
 .category-btn{
   padding:10px 18px;
-  border-radius:25px;
-  background:#1e293b;
+  border-radius:24px;
+  background:#0f172a;
   cursor:pointer;
   white-space:nowrap;
+  border:1px solid rgba(139,92,246,.2);
+  transition:.25s;
+}
+
+.category-btn:hover{
+  background:#111827;
 }
 
 .category-btn.active{
   background:linear-gradient(90deg,#8b5cf6,#6366f1);
+  box-shadow:0 0 18px rgba(139,92,246,.6);
+  border:none;
 }
 
-input{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(167,139,250,0.2);
-  background:#0f172a;
-  color:white;
-  margin-bottom:12px;
-}
+/* Container */
 
-.container{padding:0 15px 40px}
+.container{padding:0 16px 50px}
+
+/* Cards */
 
 .card{
-  background:#1e293b;
-  border-radius:18px;
-  padding:18px;
-  margin-bottom:14px;
+  background:rgba(15,23,42,.85);
+  backdrop-filter:blur(8px);
+  border-radius:20px;
+  padding:20px;
+  margin-bottom:16px;
+  border:1px solid rgba(139,92,246,.2);
   transition:.25s;
 }
 
 .card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 0 25px rgba(139,92,246,.4);
+  transform:translateY(-4px);
+  box-shadow:0 0 30px rgba(139,92,246,.45);
 }
 
 .badge{
@@ -82,28 +109,8 @@ input{
   padding:4px 10px;
   border-radius:10px;
   font-size:12px;
-  margin-bottom:10px;
   display:inline-block;
-}
-
-.btn{
-  background:linear-gradient(90deg,#8b5cf6,#6366f1);
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  color:white;
-  font-weight:500;
-  cursor:pointer;
-  width:100%;
-}
-
-.code{
-  background:#0f172a;
-  padding:15px;
-  border-radius:12px;
-  font-size:12px;
-  margin-top:12px;
-  white-space:pre-wrap;
+  margin-bottom:10px;
 }
 
 .desc{
@@ -112,8 +119,74 @@ input{
   margin-top:6px;
 }
 
-.hidden{display:none}
+.btn{
+  background:linear-gradient(90deg,#8b5cf6,#6366f1);
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  color:white;
+  font-weight:500;
+  cursor:pointer;
+  width:100%;
+  font-size:15px;
+}
+
+/* Code block */
+
+.code{
+  position:relative;
+  background:#020617;
+  padding:18px;
+  border-radius:14px;
+  font-size:13px;
+  margin-top:14px;
+  white-space:pre-wrap;
+  border:1px solid rgba(139,92,246,.2);
+}
+
+/* Copy button */
+
+.copy-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#111827;
+  border:1px solid rgba(139,92,246,.3);
+  color:#cbd5e1;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:12px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.copy-btn:hover{
+  background:#8b5cf6;
+  color:white;
+}
+
+/* Back */
+
 .back{cursor:pointer;margin-bottom:15px;color:#a78bfa}
+
+/* Toast */
+
+.toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#8b5cf6;
+  padding:10px 16px;
+  border-radius:12px;
+  font-size:14px;
+  opacity:0;
+  transition:.3s;
+}
+
+.toast.show{opacity:1}
+
+.hidden{display:none}
 </style>
 </head>
 
@@ -133,9 +206,11 @@ input{
   <div id="detailView" class="hidden"></div>
 </div>
 
+<div id="toast" class="toast">Copied ✓</div>
+
 <script>
 
-/* ===== CONFIG ENDPOINT ===== */
+/* ===== CONFIG ===== */
 
 const apiConfig = {
 
@@ -150,15 +225,8 @@ const apiConfig = {
   },
 
   ai:{
-    chat:{desc:"AI chat sederhana",params:["q"]}
-  },
-
-  download:{
-    tiktok:{desc:"Download video TikTok",params:["url"]}
-  },
-
-  anime:{
-    search:{desc:"Cari anime berdasarkan judul",params:["q"]}
+    chat:{desc:"AI chat sederhana",params:["q"]},
+    cici:{desc:"AI Cici dari Anabot",params:["prompt"]}
   }
 
 };
@@ -166,7 +234,7 @@ const apiConfig = {
 let currentCategory="all";
 let searchText="";
 
-/* SAVE API KEY */
+/* SAVE KEY */
 
 const savedKey=localStorage.getItem("apikey");
 if(savedKey) globalKey.value=savedKey;
@@ -182,14 +250,22 @@ searchBox.oninput=e=>{
   renderList(currentCategory);
 };
 
+/* TOAST */
+
+function showToast(){
+  const t=document.getElementById("toast");
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1500);
+}
+
 /* COPY */
 
 function copyText(text){
   navigator.clipboard.writeText(text);
-  alert("Copied!");
+  showToast();
 }
 
-/* CATEGORY BUTTON */
+/* CATEGORY */
 
 function generateCategories(){
 
@@ -310,28 +386,24 @@ async function executeRequest(c,ep){
 
   resultArea.innerHTML="Loading...";
 
-  try{
+  const res=await fetch(url);
+  const json=await res.json();
 
-    const res=await fetch(url);
-    const json=await res.json();
-
-    resultArea.innerHTML=`
-      <div class="code">
+  resultArea.innerHTML=`
+    <div class="code">
+<button class="copy-btn" onclick="copyText(\`${fetchCode}\`)">Copy</button>
 <b>REQUEST</b>
+
 ${fetchCode}
-<button onclick='copyText(\`${fetchCode}\`)'>Copy</button>
-      </div>
+    </div>
 
-      <div class="code">
+    <div class="code">
+<button class="copy-btn" onclick="copyText(\`${JSON.stringify(json,null,2)}\`)">Copy</button>
 <b>RESPONSE</b>
-${JSON.stringify(json,null,2)}
-<button onclick='copyText(\`${JSON.stringify(json,null,2)}\`)'>Copy</button>
-      </div>
-    `;
 
-  }catch(e){
-    resultArea.innerHTML=`<div class="code">Error: ${e.message}</div>`;
-  }
+${JSON.stringify(json,null,2)}
+    </div>
+  `;
 }
 
 /* INIT */
