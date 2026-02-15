@@ -47,6 +47,32 @@ export default async function handler(req, res) {
         reply: `Halo! Kamu bilang: ${q}`
       });
     }
+// ======================
+// 🤖 AI CICI
+// ======================
+
+if (category === "ai" && name === "cici") {
+
+  const { prompt } = req.query;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "prompt required" });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/ai/cici?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+
+  return res.json({
+    success: true,
+    author: "@dinns",
+    request_id: generateId(16),
+    source: "Dinnsstore",
+    result: data.data.result
+  });
+}
 
     // ======================
     // 🎬 DRAMA SEARCH
