@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       const { number } = req.query;
 
       const r = await fetch(
-        `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=free`
+        `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=P5btAuX`
       );
 
       return res.json(await r.json());
