@@ -2,11 +2,12 @@ export default async function handler(req, res) {
 
   try {
 
-    const { url } = req.query;
+    const { id } = req.query;
 
-    if (!url) {
-      return res.status(400).send("Missing image URL");
-    }
+    if (!id) return res.status(400).send("Missing id");
+
+    // 🔥 decode base64 → URL asli
+    const url = Buffer.from(id, "base64").toString("utf-8");
 
     const response = await fetch(url);
 
