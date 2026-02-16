@@ -237,15 +237,20 @@ const apiConfig = {
   },
 
   ai:{
-    chat:{desc:"AI chat sederhana",params:["q"]},
+  chat:{desc:"AI chat sederhana",params:["q"]},
 
-    cici:{desc:"AI Cici (Dinns AI)",params:["prompt"]},
+  cici:{desc:"AI Dinns (Dinns AI)",params:["prompt"]},
 
-    perplexity:{
-      desc:"AI Perplexity dengan jawaban + sumber",
-      params:["prompt"]
-    }
+  perplexity:{
+    desc:"AI Perplexity dengan jawaban + sumber",
+    params:["prompt"]
   },
+
+  turboseek:{
+    desc:"AI TurboSeek dengan jawaban + referensi",
+    params:["prompt"]
+  }
+},
 
   download:{
     gdrive:{desc:"Download file Google Drive",params:["url"]}
