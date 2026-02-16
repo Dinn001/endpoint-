@@ -28,7 +28,6 @@ body{
   padding:28px;
   font-size:28px;
   font-weight:600;
-  letter-spacing:.5px;
 }
 
 /* Inputs */
@@ -70,10 +69,6 @@ input:focus{
   white-space:nowrap;
   border:1px solid rgba(139,92,246,.2);
   transition:.25s;
-}
-
-.category-btn:hover{
-  background:#111827;
 }
 
 .category-btn.active{
@@ -140,8 +135,26 @@ input:focus{
   border-radius:14px;
   font-size:13px;
   margin-top:14px;
-  white-space:pre-wrap;
+
+  white-space:pre;
+  overflow:auto;
+  max-width:100%;
+
   border:1px solid rgba(139,92,246,.2);
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height:1.5;
+}
+
+/* Scrollbar */
+
+.code::-webkit-scrollbar{
+  height:8px;
+}
+
+.code::-webkit-scrollbar-thumb{
+  background:#6366f1;
+  border-radius:10px;
 }
 
 /* Copy button */
@@ -157,7 +170,6 @@ input:focus{
   padding:6px 10px;
   font-size:12px;
   cursor:pointer;
-  transition:.2s;
 }
 
 .copy-btn:hover{
@@ -215,43 +227,22 @@ input:focus{
 const apiConfig = {
 
   drama:{
-    search:{
-      desc:"Cari drama berdasarkan judul",
-      params:["q"]
-    },
-    episode:{
-      desc:"Ambil daftar episode drama",
-      params:["id"]
-    }
+    search:{desc:"Cari drama berdasarkan judul",params:["q"]},
+    episode:{desc:"Ambil daftar episode drama",params:["id"]}
   },
 
   tools:{
-    unban:{
-      desc:"Unban nomor WhatsApp",
-      params:["number"]
-    },
-    ssweb:{
-      desc:"Screenshot website",
-      params:["url"]
-    }
+    unban:{desc:"Unban nomor WhatsApp",params:["number"]},
+    ssweb:{desc:"Screenshot website",params:["url"]}
   },
 
   ai:{
-    chat:{
-      desc:"AI chat sederhana",
-      params:["q"]
-    },
-    cici:{
-      desc:"AI Cici dari Anabot",
-      params:["prompt"]
-    }
+    chat:{desc:"AI chat sederhana",params:["q"]},
+    cici:{desc:"AI Cici dari Anabot",params:["prompt"]}
   },
 
   download:{
-    gdrive:{
-      desc:"Download file dari Google Drive",
-      params:["url"]
-    }
+    gdrive:{desc:"Download file dari Google Drive",params:["url"]}
   }
 
 };
