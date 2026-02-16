@@ -380,6 +380,45 @@ if (category === "download" && name === "instagram") {
   });
 }
     // ======================
+// 🎵 TIKTOK DOWNLOAD
+// ======================
+
+if (category === "download" && name === "tiktok") {
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      error: "Parameter url diperlukan"
+    });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/download/tiktok?url=${encodeURIComponent(url)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+  const result = data?.data?.result || {};
+
+  return res.json({
+    success: true,
+    api: "Dinns Downloader",
+    service: "TikTok",
+    author: "@dinns",
+    request_id: generateId(),
+
+    creator: result.username || null,
+    description: result.description || null,
+
+    media: {
+      thumbnail: result.thumbnail || null,
+      video_hd: result.video || null,
+      video_no_watermark: result.nowatermark || null,
+      audio_mp3: result.audio || null
+    }
+  });
+}
+    // ======================
     // ❌ DEFAULT
     // ======================
 
