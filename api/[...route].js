@@ -287,6 +287,61 @@ if (category === "download" && name === "gdrive") {
     }
   });
 }
+    // ======================
+// 📘 FACEBOOK DOWNLOAD
+// ======================
+
+if (category === "download" && name === "facebook") {
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      error: "Parameter url diperlukan"
+    });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/download/facebook?url=${encodeURIComponent(url)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+
+  const info = data?.data?.result?.api;
+
+  return res.json({
+    success: true,
+    api: "Dinns Downloader",
+    service: "Facebook",
+    author: "@dinns",
+    request_id: generateId(),
+
+    post: {
+      id: info?.id,
+      title: info?.title,
+      description: info?.description,
+      preview: info?.imagePreviewUrl,
+      permanent_link: info?.permanentLink
+    },
+
+    user: info?.userInfo ? {
+      name: info.userInfo.name,
+      username: info.userInfo.username,
+      avatar: info.userInfo.userAvatar,
+      verified: info.userInfo.isVerified
+    } : null,
+
+    media: info?.mediaItems?.map(m => ({
+      type: m.type,
+      quality: m.mediaQuality,
+      resolution: m.mediaRes,
+      size: m.mediaFileSize,
+      format: m.mediaExtension,
+      duration: m.mediaDuration,
+      url: m.mediaUrl
+    })) || []
+  });
+}
 
     // ======================
     // ❌ DEFAULT
