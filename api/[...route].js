@@ -342,7 +342,43 @@ if (category === "download" && name === "facebook") {
     })) || []
   });
 }
+// ======================
+// 📸 INSTAGRAM DOWNLOAD
+// ======================
 
+if (category === "download" && name === "instagram") {
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      error: "Parameter url diperlukan"
+    });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/download/instagram?url=${encodeURIComponent(url)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+  const media = data?.data?.result || [];
+
+  return res.json({
+    success: true,
+    api: "Dinns Downloader",
+    service: "Instagram",
+    author: "@dinns",
+    request_id: generateId(),
+
+    total_media: media.length,
+
+    media: media.map((m, i) => ({
+      id: i + 1,
+      thumbnail: m.thumbnail,
+      download: m.url
+    }))
+  });
+}
     // ======================
     // ❌ DEFAULT
     // ======================
