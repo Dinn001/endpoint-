@@ -238,15 +238,20 @@ const apiConfig = {
 
   ai:{
     chat:{desc:"AI chat sederhana",params:["q"]},
-    cici:{desc:"AI Cici dari Anabot",params:["prompt"]}
+
+    cici:{desc:"AI Cici (Dinns AI)",params:["prompt"]},
+
+    perplexity:{
+      desc:"AI Perplexity dengan jawaban + sumber",
+      params:["prompt"]
+    }
   },
 
   download:{
-    gdrive:{desc:"Download file dari Google Drive",params:["url"]}
+    gdrive:{desc:"Download file Google Drive",params:["url"]}
   }
 
 };
-
 let currentCategory="all";
 let searchText="";
 
