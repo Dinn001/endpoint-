@@ -143,6 +143,37 @@ if (category === "ai" && name === "turboseek") {
   });
 }
     // ======================
+// 🧠 AI DEEPAI (DINNS)
+// ======================
+
+if (category === "ai" && name === "deepai") {
+
+  const { prompt, type } = req.query;
+
+  if (!prompt || !type) {
+    return res.status(400).json({
+      error: "Parameter prompt dan type diperlukan"
+    });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/ai/deepai?prompt=${encodeURIComponent(prompt)}&type=${encodeURIComponent(type)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+  const result = data?.data?.result?.result;
+
+  return res.json({
+    success: true,
+    api: "Dinns AI",
+    model: "DeepAI",
+    mode: type,
+    author: "@dinns",
+    request_id: generateId(),
+    answer: result || null
+  });
+}
+    // ======================
     // 🎬 DRAMA SEARCH
     // ======================
 
