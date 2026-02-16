@@ -111,6 +111,38 @@ if (category === "ai" && name === "perplexity") {
   });
 }
     // ======================
+// ⚡ AI TURBOSEEK (DINNS)
+// ======================
+
+if (category === "ai" && name === "turboseek") {
+
+  const { prompt } = req.query;
+
+  if (!prompt) {
+    return res.status(400).json({
+      error: "Parameter prompt diperlukan"
+    });
+  }
+
+  const r = await fetch(
+    `https://anabot.my.id/api/ai/turboseek?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+  const result = data?.data?.result;
+
+  return res.json({
+    success: true,
+    api: "Dinns AI",
+    model: "TurboSeek",
+    author: "@dinns",
+    request_id: generateId(),
+    answer: result?.message || null,
+    sources: result?.sources || [],
+    related_questions: result?.similarQuestions || []
+  });
+}
+    // ======================
     // 🎬 DRAMA SEARCH
     // ======================
 
