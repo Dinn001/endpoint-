@@ -73,7 +73,43 @@ if (category === "ai" && name === "cici") {
     result: data.data.result
   });
 }
+// ======================
+// 🧠 AI PERPLEXITY (DINNS)
+// ======================
 
+if (category === "ai" && name === "perplexity") {
+
+  const { prompt } = req.query;
+
+  if (!prompt) {
+    return res.status(400).json({
+      error: "Parameter prompt diperlukan"
+    });
+  }
+
+  // 🔥 Ambil dari API luar (rahasia)
+  const r = await fetch(
+    `https://anabot.my.id/api/ai/perplexity?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
+  );
+
+  const data = await r.json();
+
+  const result = data?.data?.result;
+
+  // 🔥 Output versi DINNS
+  return res.json({
+    success: true,
+    api: "Dinns AI",
+    model: "Perplexity",
+    author: "@dinns",
+    request_id: generateId(),
+    answer: result?.gpt || null,
+    sources: (result?.source || []).map(s => ({
+      title: s.name,
+      url: s.url
+    }))
+  });
+}
     // ======================
     // 🎬 DRAMA SEARCH
     // ======================
