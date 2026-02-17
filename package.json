@@ -1,4 +1,7 @@
 {
   "name": "dinns-api",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
 }
