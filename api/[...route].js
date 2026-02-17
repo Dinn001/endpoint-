@@ -313,49 +313,67 @@ if (category === "tools" && name === "stokxl") {
 }
 
 // ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (REALTIME)
+// 📊 TOOLS — STOK CIRCLE / XCL (CEK 1 KODE REALTIME)
 // ===================================================
 if (category === "tools" && name === "stokcircle") {
+
+  const { kode } = req.query;
+
+  if (!kode) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter kode diperlukan"
+    });
+  }
 
   const r = await fetchHTML("https://juraganxl.my.id/");
   if (!r.success) return res.status(504).json(r);
 
-  const text = r.data
+  const clean = r.data
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, "\n");
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ");
 
-  const lines = text
-    .split("\n")
-    .map(v => v.trim())
-    .filter(Boolean);
+  // 🔎 Cari posisi kode
+  const match = clean.match(new RegExp(`${kode}\\b`, "i"));
 
-  const data = [];
-
-  for (let i = 0; i < lines.length; i++) {
-
-    if (/^XCLP\d+/i.test(lines[i])) {
-
-      const name = lines[i];
-
-      const stockMatch = lines[i + 1]?.match(/\d+/);
-      const stock = stockMatch ? stockMatch[0] : "0";
-
-      const quota =
-        lines[i + 2]?.match(/GB/i)
-          ? lines[i + 2]
-          : null;
-
-      data.push({ name, stock, quota });
-    }
+  if (!match) {
+    return sendResponse(
+      res,
+      "tools",
+      "stokcircle",
+      null,
+      { kode, found: false },
+      r.ping
+    );
   }
+
+  // Ambil blok sekitar kode
+  const start = match.index;
+  const block = clean.slice(start, start + 300);
+
+  const stock =
+    block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
+    block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
+    "0";
+
+  const quota =
+    block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
+    block.match(/(\d+\s*GB)/i)?.[1] ||
+    null;
 
   return sendResponse(
     res,
     "tools",
     "stokcircle",
     null,
-    data,
+    {
+      kode: kode.toUpperCase(),
+      stock,
+      quota,
+      found: true
+    },
     r.ping
   );
 }
