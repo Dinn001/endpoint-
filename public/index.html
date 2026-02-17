@@ -184,63 +184,80 @@ pre{margin:0}
 <script>
 
 const apiConfig = {
+const apiConfig = {
 
-  drama:{
-    search:{desc:"Cari drama berdasarkan judul",params:["q"]},
-    episode:{desc:"Ambil daftar episode drama",params:["id"]}
-  },
-tools: {
-  unban: {
-    desc: "Unban nomor WhatsApp",
-    params: ["number"]
+  drama: {
+    search: { desc: "Cari drama berdasarkan judul", params: ["q"] },
+    episode: { desc: "Ambil daftar episode drama", params: ["id"] }
   },
 
-  ssweb: {
-    desc: "Screenshot website",
-    params: ["url"]
+  tools: {
+    unban: {
+      desc: "Unban nomor WhatsApp",
+      params: ["number"]
+    },
+
+    ssweb: {
+      desc: "Screenshot website",
+      params: ["url"]
+    },
+
+    stokxl: {
+      desc: "Scraping stok XL Akrab Global",
+      params: []
+    },
+
+    stokcircle: {
+      desc: "Scraping stok Circle / XCL",
+      params: []
+    }
+  }, // ✅ WAJIB ADA
+
+  ai: {
+    chat: { desc: "AI chat sederhana", params: ["q"] },
+
+    cici: { desc: "AI Dinns", params: ["prompt"] },
+
+    perplexity: { desc: "AI Perplexity", params: ["prompt"] },
+
+    turboseek: { desc: "AI TurboSeek", params: ["prompt"] },
+
+    deepai: {
+      desc: "AI DeepAI",
+      params: ["prompt", "type:chat"]
+    }
   },
 
-  stokxl: {
-    desc: "Scraping stok XL Akrab Global",
-    params: []
-  },
+  download: {
 
-  stokcircle: {
-    desc: "Scraping stok Circle / XCL",
-    params: []
+    gdrive: {
+      desc: "Download file Google Drive",
+      params: ["url"]
+    },
+
+    facebook: {
+      desc: "Download video Facebook / Reel",
+      params: ["url"]
+    },
+
+    instagram: {
+      desc: "Download Instagram Post / Reel / Carousel",
+      params: ["url"]
+    },
+
+    capcut: {
+      desc: "Download Video Template CapCut",
+      params: ["url"]
+    },
+
+    tiktok: {
+      desc: "Download video TikTok (No Watermark + Audio)",
+      params: ["url"]
+    }
+
   }
-}
-  ai:{
-    chat:{desc:"AI chat sederhana",params:["q"]},
-    cici:{desc:"AI Dinns",params:["prompt"]},
-    perplexity:{desc:"AI Perplexity",params:["prompt"]},
-    turboseek:{desc:"AI TurboSeek",params:["prompt"]},
-    deepai:{desc:"AI DeepAI",params:["prompt","type:chat"]}
-  },
 
-  download:{
-  gdrive:{desc:"Download file Google Drive",params:["url"]},
-
-  facebook:{
-    desc:"Download video Facebook / Reel",
-    params:["url"]
-  },
-
-  instagram:{
-    desc:"Download Instagram Post / Reel / Carousel",
-    params:["url"]
-  },
-    capcut:{
-    desc:"Download Vidio Tamplate Capcut",
-    params:["url"]
-  },
-  tiktok:{
-    desc:"Download video TikTok (No Watermark + Audio)",
-    params:["url"]
-  }
-}
 };
-
 let currentCategory="all";
 let searchText="";
 
