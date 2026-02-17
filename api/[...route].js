@@ -31,7 +31,49 @@ function sendResponse(res, category, endpoint, model, data, ping = null) {
     data
   });
 }
+// ======================
+// 🌐 FETCH HTML (SCRAPE)
+// ======================
+async function fetchHTML(url, timeout = 14000) {
 
+  const start = Date.now();
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+      }
+    });
+
+    const html = await res.text(); // ✅ PENTING
+
+    return {
+      success: true,
+      data: html,
+      ping: Date.now() - start
+    };
+
+  } catch (err) {
+
+    return {
+      success: false,
+      error:
+        err.name === "AbortError"
+          ? "Request timeout (>14s)"
+          : err.message,
+      ping: Date.now() - start
+    };
+
+  } finally {
+    clearTimeout(id);
+  }
+}
 // ======================
 // ⏱ FETCH TIMEOUT + PING
 // ======================
@@ -286,17 +328,42 @@ export default async function handler(req, res) {
       return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
 // ===================================================
-// 📊 SCRAPE STOK XL (OUTPUT NORMAL)
+
+    // ===================================================
+    // 📥 GDRIVE
+    // ===================================================
+    if (category === "download" && name === "gdrive") {
+
+      const { url } = req.query;
+
+      const r = await fetchWithTimeout(
+        `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
+      );
+
+      if (!r.success) return res.status(504).json(r);
+
+      const result = r.data.data.result;
+
+      return sendResponse(
+        res,
+        "download",
+        "gdrive",
+        "Google Drive",
+        {
+          name: result.name,
+          download: result.download,
+          original: result.link
+// ===================================================
+// 📊 TOOLS — STOK XL SCRAPER
 // ===================================================
 if (category === "tools" && name === "stokxl") {
 
-  const r = await fetchWithTimeout("https://juraganxl.my.id/");
+  const r = await fetchHTML("https://juraganxl.my.id/");
 
   if (!r.success) return res.status(504).json(r);
 
   const html = r.data;
 
-  // Bersihkan HTML
   const clean = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -326,41 +393,13 @@ if (category === "tools" && name === "stokxl") {
 
   return sendResponse(
     res,
-    "scrape",
+    "tools",
     "stokxl",
     null,
     data,
     r.ping
   );
-}
-    // ===================================================
-    // 📥 GDRIVE
-    // ===================================================
-    if (category === "download" && name === "gdrive") {
-
-      const { url } = req.query;
-
-      const r = await fetchWithTimeout(
-        `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
-      );
-
-      if (!r.success) return res.status(504).json(r);
-
-      const result = r.data.data.result;
-
-      return sendResponse(
-        res,
-        "download",
-        "gdrive",
-        "Google Drive",
-        {
-          name: result.name,
-          download: result.download,
-          original: result.link
-        },
-        r.ping
-      );
-    }
+      }   
 
     // ===================================================
     // 📘 FACEBOOK
