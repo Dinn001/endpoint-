@@ -286,9 +286,9 @@ export default async function handler(req, res) {
       return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
 // ===================================================
-// 📊 STOK XL AKRAB SCRAPER
+// 📊 SCRAPE STOK XL (OUTPUT NORMAL)
 // ===================================================
-if (category === "tools" && name === "stokxl") {
+if (category === "scrape" && name === "stokxl") {
 
   const r = await fetchWithTimeout("https://juraganxl.my.id/");
 
@@ -296,6 +296,7 @@ if (category === "tools" && name === "stokxl") {
 
   const html = r.data;
 
+  // Bersihkan HTML
   const clean = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -307,12 +308,13 @@ if (category === "tools" && name === "stokxl") {
   let data = [];
 
   for (let i = 0; i < idx.length; i++) {
+
     const block = clean.slice(idx[i], idx[i + 1] || clean.length);
 
     const name = block.match(/XDA\d+/)?.[0];
     const stock = block.match(/stock\s*:\s*(\d+)/i)?.[1] || "0";
 
-    const quotas = [...block.matchAll(/Area(\d+)\s*(\d+)GB/gi)]
+    const quotas = [...block.matchAll(/Area\s*(\d+)\s*(\d+)GB/gi)]
       .map(q => `Area ${q[1]} : ${q[2]}GB`);
 
     data.push({
@@ -324,9 +326,9 @@ if (category === "tools" && name === "stokxl") {
 
   return sendResponse(
     res,
-    "tools",
+    "scrape",
     "stokxl",
-    "JuraganXL Scraper",
+    null,
     data,
     r.ping
   );
