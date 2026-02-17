@@ -5,18 +5,16 @@ function generateId(length = 16) {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
-
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-
   return result;
 }
 
 // ======================
 // 📦 RESPONSE FORMAT
 // ======================
-function sendResponse(res, category, endpoint, model, data) {
+function sendResponse(res, category, endpoint, model, data, ping = null) {
   return res.json({
     success: true,
     api: "Dinns API",
@@ -29,46 +27,44 @@ function sendResponse(res, category, endpoint, model, data) {
     author: "@dinns",
     request_id: generateId(),
 
+    ping_ms: ping,
     data
   });
 }
-async function fetchWithTimeout(url, options = {}, timeout = 14000) {
+
+// ======================
+// ⏱ FETCH TIMEOUT + PING
+// ======================
+async function fetchWithTimeout(url, timeout = 14000) {
   const start = Date.now();
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const res = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-
+    const res = await fetch(url, { signal: controller.signal });
     const data = await res.json();
-
-    const ping = Date.now() - start;
 
     return {
       success: true,
       data,
-      ping
+      ping: Date.now() - start
     };
 
   } catch (err) {
-
-    const ping = Date.now() - start;
-
     return {
       success: false,
-      error: err.name === "AbortError"
-        ? "Request timeout (>14s)"
-        : err.message,
-      ping
+      error:
+        err.name === "AbortError"
+          ? "Request timeout (>14s)"
+          : err.message,
+      ping: Date.now() - start
     };
   } finally {
     clearTimeout(id);
   }
 }
+
 // ======================
 // 🚀 HANDLER
 // ======================
@@ -77,7 +73,6 @@ export default async function handler(req, res) {
 
     const { apikey } = req.query;
 
-    // 🔐 API KEY CHECK
     if (apikey !== "dinns_key") {
       return res.status(403).json({
         success: false,
@@ -85,27 +80,25 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔥 GET PATH
-    const path = req.url
-      .replace(/^\/api\//, "")
-      .split("?")[0]
-      .split("/");
+    // PATH SAFE
+    const pathname = req.url.split("?")[0];
+    const path = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
 
-    const category = path[0];
-    const name = path[1];
+    const category = path[0] || "unknown";
+    const name = path[1] || "unknown";
 
     // ===================================================
-    // 🤖 AI CHAT
+    // 🤖 AI CHAT (LOCAL)
     // ===================================================
     if (category === "ai" && name === "chat") {
       const { q } = req.query;
-
       return sendResponse(
         res,
         "ai",
         "chat",
         "Dinns AI",
-        { reply: `Halo! Kamu bilang: ${q}` }
+        { reply: `Halo! Kamu bilang: ${q || ""}` },
+        0
       );
     }
 
@@ -116,18 +109,19 @@ export default async function handler(req, res) {
 
       const { prompt } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/ai/cici?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
+      if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
         res,
         "ai",
         "cici",
         "Dinns AI",
-        { result: data.data.result }
+        { result: r.data.data.result },
+        r.ping
       );
     }
 
@@ -138,12 +132,13 @@ export default async function handler(req, res) {
 
       const { prompt } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/ai/perplexity?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const result = data?.data?.result;
+      if (!r.success) return res.status(504).json(r);
+
+      const result = r.data?.data?.result;
 
       return sendResponse(
         res,
@@ -156,7 +151,8 @@ export default async function handler(req, res) {
             title: s.name,
             url: s.url
           }))
-        }
+        },
+        r.ping
       );
     }
 
@@ -167,12 +163,13 @@ export default async function handler(req, res) {
 
       const { prompt } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/ai/turboseek?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const result = data?.data?.result;
+      if (!r.success) return res.status(504).json(r);
+
+      const result = r.data?.data?.result;
 
       return sendResponse(
         res,
@@ -183,7 +180,8 @@ export default async function handler(req, res) {
           answer: result?.message || null,
           sources: result?.sources || [],
           related_questions: result?.similarQuestions || []
-        }
+        },
+        r.ping
       );
     }
 
@@ -194,12 +192,13 @@ export default async function handler(req, res) {
 
       const { prompt, type } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/ai/deepai?prompt=${encodeURIComponent(prompt)}&type=${encodeURIComponent(type)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const result = data?.data?.result?.result;
+      if (!r.success) return res.status(504).json(r);
+
+      const result = r.data?.data?.result?.result;
 
       return sendResponse(
         res,
@@ -209,7 +208,8 @@ export default async function handler(req, res) {
         {
           mode: type,
           answer: result || null
-        }
+        },
+        r.ping
       );
     }
 
@@ -220,13 +220,13 @@ export default async function handler(req, res) {
 
       const { q } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/search/drama/melolo/search?query=${encodeURIComponent(q)}&apikey=freeApikey`
       );
 
-      const result = await r.json();
+      if (!r.success) return res.status(504).json(r);
 
-      return sendResponse(res, "drama", "search", null, result);
+      return sendResponse(res, "drama", "search", null, r.data, r.ping);
     }
 
     // ===================================================
@@ -236,13 +236,13 @@ export default async function handler(req, res) {
 
       const { id } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/search/drama/melolo/episode?series_id=${id}&apikey=freeApikey`
       );
 
-      const result = await r.json();
+      if (!r.success) return res.status(504).json(r);
 
-      return sendResponse(res, "drama", "episode", null, result);
+      return sendResponse(res, "drama", "episode", null, r.data, r.ping);
     }
 
     // ===================================================
@@ -252,18 +252,19 @@ export default async function handler(req, res) {
 
       const { url, device = "windows", fullPage = "off" } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/tools/ssweb?url=${encodeURIComponent(url)}&device=${device}&fullPage=${fullPage}&apikey=freeApikey`
       );
 
-      const data = await r.json();
+      if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
         res,
         "tools",
         "ssweb",
         null,
-        { image: data.data.result }
+        { image: r.data.data.result },
+        r.ping
       );
     }
 
@@ -274,21 +275,15 @@ export default async function handler(req, res) {
 
       const { number } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=P5btAuX`
       );
 
-      const data = await r.json();
+      if (!r.success) return res.status(504).json(r);
 
-      delete data.data.messageId;
+      delete r.data?.data?.messageId;
 
-      return sendResponse(
-        res,
-        "tools",
-        "unban",
-        null,
-        data.data
-      );
+      return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
 
     // ===================================================
@@ -298,12 +293,13 @@ export default async function handler(req, res) {
 
       const { url } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const result = data.data.result;
+      if (!r.success) return res.status(504).json(r);
+
+      const result = r.data.data.result;
 
       return sendResponse(
         res,
@@ -314,7 +310,8 @@ export default async function handler(req, res) {
           name: result.name,
           download: result.download,
           original: result.link
-        }
+        },
+        r.ping
       );
     }
 
@@ -325,34 +322,21 @@ export default async function handler(req, res) {
 
       const { url } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/download/facebook?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const info = data?.data?.result?.api;
+      if (!r.success) return res.status(504).json(r);
+
+      const info = r.data?.data?.result?.api;
 
       return sendResponse(
         res,
         "download",
         "facebook",
         "Facebook",
-        {
-          post: {
-            id: info?.id,
-            title: info?.title,
-            description: info?.description,
-            preview: info?.imagePreviewUrl,
-            permanent_link: info?.permanentLink
-          },
-          user: info?.userInfo ? {
-            name: info.userInfo.name,
-            username: info.userInfo.username,
-            avatar: info.userInfo.userAvatar,
-            verified: info.userInfo.isVerified
-          } : null,
-          media: info?.mediaItems || []
-        }
+        info,
+        r.ping
       );
     }
 
@@ -363,26 +347,21 @@ export default async function handler(req, res) {
 
       const { url } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/download/instagram?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const media = data?.data?.result || [];
+      if (!r.success) return res.status(504).json(r);
+
+      const media = r.data?.data?.result || [];
 
       return sendResponse(
         res,
         "download",
         "instagram",
         "Instagram",
-        {
-          total_media: media.length,
-          media: media.map((m, i) => ({
-            id: i + 1,
-            thumbnail: m.thumbnail,
-            download: m.url
-          }))
-        }
+        media,
+        r.ping
       );
     }
 
@@ -393,28 +372,65 @@ export default async function handler(req, res) {
 
       const { url } = req.query;
 
-      const r = await fetch(
+      const r = await fetchWithTimeout(
         `https://anabot.my.id/api/download/tiktok?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
 
-      const data = await r.json();
-      const result = data?.data?.result || {};
+      if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
         res,
         "download",
         "tiktok",
         "TikTok",
-        {
-          creator: result.username || null,
-          description: result.description || null,
-          media: {
-            thumbnail: result.thumbnail || null,
-            video_hd: result.video || null,
-            video_no_watermark: result.nowatermark || null,
-            audio_mp3: result.audio || null
-          }
-        }
+        r.data?.data?.result,
+        r.ping
+      );
+    }
+
+    // ===================================================
+    // 🎬 CAPCUT
+    // ===================================================
+    if (category === "download" && name === "capcut") {
+
+      const { url } = req.query;
+
+      const r = await fetchWithTimeout(
+        `https://anabot.my.id/api/download/capcut?url=${encodeURIComponent(url)}&apikey=freeApikey`
+      );
+
+      if (!r.success) return res.status(504).json(r);
+
+      return sendResponse(
+        res,
+        "download",
+        "capcut",
+        "CapCut",
+        r.data?.data?.result,
+        r.ping
+      );
+    }
+
+    // ===================================================
+    // 📦 SAVEWEB2ZIP
+    // ===================================================
+    if (category === "download" && name === "sitezip") {
+
+      const { url } = req.query;
+
+      const r = await fetchWithTimeout(
+        `https://copier.saveweb2zip.com/api/downloadArchive/${url}`
+      );
+
+      if (!r.success) return res.status(504).json(r);
+
+      return sendResponse(
+        res,
+        "download",
+        "sitezip",
+        "SaveWeb2Zip",
+        r.data,
+        r.ping
       );
     }
 
@@ -424,7 +440,8 @@ export default async function handler(req, res) {
     return res.status(404).json({
       success: false,
       error: "Endpoint not found",
-      route: `${category}/${name}`
+      category,
+      endpoint: name
     });
 
   } catch (err) {
@@ -433,4 +450,4 @@ export default async function handler(req, res) {
       error: err.message
     });
   }
-        }
+}
