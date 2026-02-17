@@ -19,48 +19,38 @@ function sendResponse(res, category, endpoint, model, data, ping = null) {
     success: true,
     api: "Dinns API",
     base_url: "https://endpoint-dinns.vercel.app",
-
     category,
     endpoint,
     model: model || null,
-
     author: "@dinns",
     request_id: generateId(),
-
     ping_ms: ping,
     data
   });
 }
+
 // ======================
 // 🌐 FETCH HTML (SCRAPE)
 // ======================
 async function fetchHTML(url, timeout = 14000) {
-
   const start = Date.now();
-
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
-
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36"
       }
     });
 
-    const html = await res.text(); // ✅ PENTING
+    const html = await res.text();
 
-    return {
-      success: true,
-      data: html,
-      ping: Date.now() - start
-    };
+    return { success: true, data: html, ping: Date.now() - start };
 
   } catch (err) {
-
     return {
       success: false,
       error:
@@ -69,17 +59,16 @@ async function fetchHTML(url, timeout = 14000) {
           : err.message,
       ping: Date.now() - start
     };
-
   } finally {
     clearTimeout(id);
   }
 }
-// ======================
-// ⏱ FETCH TIMEOUT + PING
-// ======================
-async function fetchWithTimeout(url, timeout = 14000) {
-  const start = Date.now();
 
+// ======================
+// ⏱ FETCH JSON
+// ======================
+async function fetchJSON(url, timeout = 14000) {
+  const start = Date.now();
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -87,11 +76,7 @@ async function fetchWithTimeout(url, timeout = 14000) {
     const res = await fetch(url, { signal: controller.signal });
     const data = await res.json();
 
-    return {
-      success: true,
-      data,
-      ping: Date.now() - start
-    };
+    return { success: true, data, ping: Date.now() - start };
 
   } catch (err) {
     return {
@@ -114,7 +99,6 @@ export default async function handler(req, res) {
   try {
 
     const { apikey } = req.query;
-
     if (apikey !== "dinns_key") {
       return res.status(403).json({
         success: false,
@@ -122,7 +106,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // PATH SAFE
     const pathname = req.url.split("?")[0];
     const path = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
 
@@ -148,13 +131,11 @@ export default async function handler(req, res) {
     // 🤖 CICI
     // ===================================================
     if (category === "ai" && name === "cici") {
-
       const { prompt } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/ai/cici?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
@@ -162,7 +143,7 @@ export default async function handler(req, res) {
         "ai",
         "cici",
         "Dinns AI",
-        { result: r.data.data.result },
+        r.data?.data?.result,
         r.ping
       );
     }
@@ -171,13 +152,11 @@ export default async function handler(req, res) {
     // 🧠 PERPLEXITY
     // ===================================================
     if (category === "ai" && name === "perplexity") {
-
       const { prompt } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/ai/perplexity?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       const result = r.data?.data?.result;
@@ -189,10 +168,7 @@ export default async function handler(req, res) {
         "Perplexity",
         {
           answer: result?.gpt || null,
-          sources: (result?.source || []).map(s => ({
-            title: s.name,
-            url: s.url
-          }))
+          sources: result?.source || []
         },
         r.ping
       );
@@ -202,13 +178,11 @@ export default async function handler(req, res) {
     // ⚡ TURBOSEEK
     // ===================================================
     if (category === "ai" && name === "turboseek") {
-
       const { prompt } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/ai/turboseek?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       const result = r.data?.data?.result;
@@ -218,11 +192,7 @@ export default async function handler(req, res) {
         "ai",
         "turboseek",
         "TurboSeek",
-        {
-          answer: result?.message || null,
-          sources: result?.sources || [],
-          related_questions: result?.similarQuestions || []
-        },
+        result,
         r.ping
       );
     }
@@ -231,73 +201,53 @@ export default async function handler(req, res) {
     // 🧠 DEEPAI
     // ===================================================
     if (category === "ai" && name === "deepai") {
-
       const { prompt, type } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/ai/deepai?prompt=${encodeURIComponent(prompt)}&type=${encodeURIComponent(type)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
-
-      const result = r.data?.data?.result?.result;
 
       return sendResponse(
         res,
         "ai",
         "deepai",
         "DeepAI",
-        {
-          mode: type,
-          answer: result || null
-        },
+        r.data?.data?.result,
         r.ping
       );
     }
 
     // ===================================================
-    // 🎬 DRAMA SEARCH
+    // 🎬 DRAMA
     // ===================================================
     if (category === "drama" && name === "search") {
-
       const { q } = req.query;
-
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/search/drama/melolo/search?query=${encodeURIComponent(q)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
-
       return sendResponse(res, "drama", "search", null, r.data, r.ping);
     }
 
-    // ===================================================
-    // 🎬 DRAMA EPISODE
-    // ===================================================
     if (category === "drama" && name === "episode") {
-
       const { id } = req.query;
-
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/search/drama/melolo/episode?series_id=${id}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
-
       return sendResponse(res, "drama", "episode", null, r.data, r.ping);
     }
 
     // ===================================================
-    // 🛠 SSWEB
+    // 🛠 TOOLS
     // ===================================================
     if (category === "tools" && name === "ssweb") {
-
       const { url, device = "windows", fullPage = "off" } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/tools/ssweb?url=${encodeURIComponent(url)}&device=${device}&fullPage=${fullPage}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
@@ -310,158 +260,114 @@ export default async function handler(req, res) {
       );
     }
 
-    // ===================================================
-    // 🛠 UNBAN
-    // ===================================================
     if (category === "tools" && name === "unban") {
-
       const { number } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://api.yydz.biz.id/api/tools/unban?number=${encodeURIComponent(number)}&apikey=P5btAuX`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       delete r.data?.data?.messageId;
 
       return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
-// ===================================================
 
     // ===================================================
-    // 📥 GDRIVE
+    // 📊 TOOLS — STOK XL (SCRAPING)
     // ===================================================
-    if (category === "download" && name === "gdrive") {
+    if (category === "tools" && name === "stokxl") {
 
-      const { url } = req.query;
-
-      const r = await fetchWithTimeout(
-        `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
-      );
-
+      const r = await fetchHTML("https://juraganxl.my.id/");
       if (!r.success) return res.status(504).json(r);
 
-      const result = r.data.data.result;
+      const clean = r.data
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ");
+
+      const idx = [...clean.matchAll(/XDA\d+/g)].map(m => m.index);
+      const data = [];
+
+      for (let i = 0; i < idx.length; i++) {
+        const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+
+        const name = block.match(/XDA\d+/)?.[0];
+        const stock = block.match(/stock\s*:\s*(\d+)/i)?.[1] || "0";
+
+        const quotas = [...block.matchAll(/Area\s*(\d+)\s*(\d+)GB/gi)]
+          .map(q => `Area ${q[1]} : ${q[2]}GB`);
+
+        data.push({ name, stock, quotas });
+      }
+
+      return sendResponse(res, "tools", "stokxl", null, data, r.ping);
+    }
+
+    // ===================================================
+    // 📥 DOWNLOAD
+    // ===================================================
+    if (category === "download" && name === "gdrive") {
+      const { url } = req.query;
+
+      const r = await fetchJSON(
+        `https://anabot.my.id/api/download/gDrive?url=${encodeURIComponent(url)}&apikey=freeApikey`
+      );
+      if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
         res,
         "download",
         "gdrive",
         "Google Drive",
-        {
-          name: result.name,
-          download: result.download,
-          original: result.link
-// ===================================================
-// 📊 TOOLS — STOK XL SCRAPER
-// ===================================================
-if (category === "tools" && name === "stokxl") {
+        r.data?.data?.result,
+        r.ping
+      );
+    }
 
-  const r = await fetchHTML("https://juraganxl.my.id/");
-
-  if (!r.success) return res.status(504).json(r);
-
-  const html = r.data;
-
-  const clean = html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ");
-
-  const idx = [...clean.matchAll(/XDA\d+/g)].map(m => m.index);
-
-  let data = [];
-
-  for (let i = 0; i < idx.length; i++) {
-
-    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
-
-    const name = block.match(/XDA\d+/)?.[0];
-    const stock = block.match(/stock\s*:\s*(\d+)/i)?.[1] || "0";
-
-    const quotas = [...block.matchAll(/Area\s*(\d+)\s*(\d+)GB/gi)]
-      .map(q => `Area ${q[1]} : ${q[2]}GB`);
-
-    data.push({
-      name,
-      stock,
-      quotas
-    });
-  }
-
-  return sendResponse(
-    res,
-    "tools",
-    "stokxl",
-    null,
-    data,
-    r.ping
-  );
-      }   
-
-    // ===================================================
-    // 📘 FACEBOOK
-    // ===================================================
     if (category === "download" && name === "facebook") {
-
       const { url } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/download/facebook?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
-
-      const info = r.data?.data?.result?.api;
 
       return sendResponse(
         res,
         "download",
         "facebook",
         "Facebook",
-        info,
+        r.data?.data?.result,
         r.ping
       );
     }
 
-    // ===================================================
-    // 📸 INSTAGRAM
-    // ===================================================
     if (category === "download" && name === "instagram") {
-
       const { url } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/download/instagram?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
-
-      const media = r.data?.data?.result || [];
 
       return sendResponse(
         res,
         "download",
         "instagram",
         "Instagram",
-        media,
+        r.data?.data?.result,
         r.ping
       );
     }
 
-    // ===================================================
-    // 🎵 TIKTOK
-    // ===================================================
     if (category === "download" && name === "tiktok") {
-
       const { url } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/download/tiktok?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
@@ -474,17 +380,12 @@ if (category === "tools" && name === "stokxl") {
       );
     }
 
-    // ===================================================
-    // 🎬 CAPCUT
-    // ===================================================
     if (category === "download" && name === "capcut") {
-
       const { url } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://anabot.my.id/api/download/capcut?url=${encodeURIComponent(url)}&apikey=freeApikey`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
@@ -497,17 +398,12 @@ if (category === "tools" && name === "stokxl") {
       );
     }
 
-    // ===================================================
-    // 📦 SAVEWEB2ZIP
-    // ===================================================
     if (category === "download" && name === "sitezip") {
-
       const { url } = req.query;
 
-      const r = await fetchWithTimeout(
+      const r = await fetchJSON(
         `https://copier.saveweb2zip.com/api/downloadArchive/${url}`
       );
-
       if (!r.success) return res.status(504).json(r);
 
       return sendResponse(
