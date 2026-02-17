@@ -320,39 +320,34 @@ if (category === "tools" && name === "stokcircle") {
   const r = await fetchHTML("https://juraganxl.my.id/");
   if (!r.success) return res.status(504).json(r);
 
-  const clean = r.data
+  const text = r.data
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ");
+    .replace(/<[^>]*>/g, "\n");
 
-  const idx = [...clean.matchAll(/XCLP\d+/gi)].map(m => m.index);
+  const lines = text
+    .split("\n")
+    .map(v => v.trim())
+    .filter(Boolean);
 
   const data = [];
 
-  for (let i = 0; i < idx.length; i++) {
+  for (let i = 0; i < lines.length; i++) {
 
-    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+    if (/^XCLP\d+/i.test(lines[i])) {
 
-    const name = block.match(/XCLP\d+/i)?.[0];
-    if (!name) continue;
+      const name = lines[i];
 
-    const stock =
-      block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
-      block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
-      "0";
+      const stockMatch = lines[i + 1]?.match(/\d+/);
+      const stock = stockMatch ? stockMatch[0] : "0";
 
-    // 🔥 quota fleksibel (format bebas)
-    const quota =
-      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
-      block.match(/(\d+\s*GB)/i)?.[1] ||
-      null;
+      const quota =
+        lines[i + 2]?.match(/GB/i)
+          ? lines[i + 2]
+          : null;
 
-    data.push({
-      name,
-      stock,
-      quota
-    });
+      data.push({ name, stock, quota });
+    }
   }
 
   return sendResponse(
