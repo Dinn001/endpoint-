@@ -304,6 +304,59 @@ export default async function handler(req, res) {
 
       return sendResponse(res, "tools", "stokxl", null, data, r.ping);
     }
+    // ===================================================
+// 📊 TOOLS — STOK CIRCLE (XCL)
+// ===================================================
+if (category === "tools" && name === "stokcircle") {
+
+  const r = await fetchHTML("https://juraganxl.my.id/");
+  if (!r.success) return res.status(504).json(r);
+
+  const html = r.data;
+
+  const clean = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ");
+
+  // 🔥 Ambil XCL*
+  const idx = [...clean.matchAll(/XCL[A-Z0-9]+/g)]
+    .map(m => m.index);
+
+  let data = [];
+
+  for (let i = 0; i < idx.length; i++) {
+
+    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+
+    const name = block.match(/XCL[A-Z0-9]+/)?.[0];
+
+    const stock =
+      block.match(/Stock\s*:\s*(\d+)/i)?.[1] || "0";
+
+    const quota =
+      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] || null;
+
+    const promo = /PROMO/i.test(block);
+
+    data.push({
+      name,
+      stock,
+      quota_range: quota,
+      promo
+    });
+  }
+
+  return sendResponse(
+    res,
+    "tools",
+    "stokcircle",
+    null,
+    data,
+    r.ping
+  );
+}
 
     // ===================================================
     // 📥 DOWNLOAD
