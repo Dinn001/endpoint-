@@ -288,7 +288,7 @@ export default async function handler(req, res) {
 // ===================================================
 // 📊 SCRAPE STOK XL (OUTPUT NORMAL)
 // ===================================================
-if (category === "scrape" && name === "stokxl") {
+if (category === "tools" && name === "stokxl") {
 
   const r = await fetchWithTimeout("https://juraganxl.my.id/");
 
