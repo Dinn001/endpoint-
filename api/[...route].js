@@ -310,21 +310,12 @@ if (category === "tools" && name === "stokxl") {
   }
 
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
-}
-
 // ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (CEK 1 KODE REALTIME)
+// 📊 TOOLS — STOK CIRCLE / XCL (AUTO MODE)
 // ===================================================
 if (category === "tools" && name === "stokcircle") {
 
-  const { kode } = req.query;
-
-  if (!kode) {
-    return res.status(400).json({
-      success: false,
-      error: "Parameter kode diperlukan"
-    });
-  }
+  const { kode } = req.query; // optional
 
   const r = await fetchHTML("https://juraganxl.my.id/");
   if (!r.success) return res.status(504).json(r);
@@ -335,48 +326,67 @@ if (category === "tools" && name === "stokcircle") {
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ");
 
-  // 🔎 Cari posisi kode
-  const match = clean.match(new RegExp(`${kode}\\b`, "i"));
+  const idx = [...clean.matchAll(/XCLP\d+/gi)].map(m => m.index);
 
-  if (!match) {
+  const data = [];
+
+  for (let i = 0; i < idx.length; i++) {
+
+    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+
+    const name = block.match(/XCLP\d+/i)?.[0];
+    if (!name) continue;
+
+    const stock =
+      block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
+      block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
+      "0";
+
+    const quota =
+      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
+      block.match(/(\d+\s*GB)/i)?.[1] ||
+      null;
+
+    data.push({ name, stock, quota });
+  }
+
+  // 🔎 MODE SINGLE
+  if (kode) {
+    const found = data.find(
+      v => v.name.toLowerCase() === kode.toLowerCase()
+    );
+
     return sendResponse(
       res,
       "tools",
       "stokcircle",
       null,
-      { kode, found: false },
+      found || null,
       r.ping
     );
   }
 
-  // Ambil blok sekitar kode
-  const start = match.index;
-  const block = clean.slice(start, start + 300);
-
-  const stock =
-    block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
-    block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
-    "0";
-
-  const quota =
-    block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
-    block.match(/(\d+\s*GB)/i)?.[1] ||
-    null;
-
+  // 🌐 MODE ALL
   return sendResponse(
     res,
     "tools",
     "stokcircle",
     null,
-    {
-      kode: kode.toUpperCase(),
-      stock,
-      quota,
-      found: true
-    },
+    data,
     r.ping
   );
-}
+}}
+
+// ===================================================
+// 📊 TOOLS — STOK CIRCLE / XCL (CEK 1 KODE REALTIME)
+// ===================================================
+if (category === "tools" && name === "stokcircle") {
+
+  const { kode } = req.query;
+
+  if (!kode) {
+    return res.status(400).json({
+
     // ===================================================
     // 📥 DOWNLOAD
     // ===================================================
