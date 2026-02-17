@@ -189,22 +189,27 @@ const apiConfig = {
     search:{desc:"Cari drama berdasarkan judul",params:["q"]},
     episode:{desc:"Ambil daftar episode drama",params:["id"]}
   },
+tools: {
+  unban: {
+    desc: "Unban nomor WhatsApp",
+    params: ["number"]
+  },
 
-  tools:{
-  unban:{desc:"Unban nomor WhatsApp",params:["number"]},
+  ssweb: {
+    desc: "Screenshot website",
+    params: ["url"]
+  },
 
-  ssweb:{desc:"Screenshot website",params:["url"]},
+  stokxl: {
+    desc: "Scraping stok XL Akrab Global",
+    params: []
+  },
 
-  stokxl:{
-    desc:"Scraping stok XL Akrab Global",
-    params:[]
+  stokcircle: {
+    desc: "Scraping stok Circle / XCL",
+    params: []
   }
-},
-stokcircel:{
-    desc:"Scraping stok XL Akrab Global",
-    params:[]
-  }
-},
+}
   ai:{
     chat:{desc:"AI chat sederhana",params:["q"]},
     cici:{desc:"AI Dinns",params:["prompt"]},
