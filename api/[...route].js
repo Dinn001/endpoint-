@@ -274,71 +274,79 @@ export default async function handler(req, res) {
     }
 
     // ===================================================
-    // 📊 TOOLS — STOK XL (SCRAPING)
-    // ===================================================
-    if (category === "tools" && name === "stokxl") {
-
-      const r = await fetchHTML("https://juraganxl.my.id/");
-      if (!r.success) return res.status(504).json(r);
-
-      const clean = r.data
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[\s\S]*?<\/style>/gi, "")
-        .replace(/<[^>]*>/g, " ")
-        .replace(/\s+/g, " ");
-
-      const idx = [...clean.matchAll(/XDA\d+/g)].map(m => m.index);
-      const data = [];
-
-      for (let i = 0; i < idx.length; i++) {
-        const block = clean.slice(idx[i], idx[i + 1] || clean.length);
-
-        const name = block.match(/XDA\d+/)?.[0];
-        const stock = block.match(/stock\s*:\s*(\d+)/i)?.[1] || "0";
-
-        const quotas = [...block.matchAll(/Area\s*(\d+)\s*(\d+)GB/gi)]
-          .map(q => `Area ${q[1]} : ${q[2]}GB`);
-
-        data.push({ name, stock, quotas });
-      }
-
-      return sendResponse(res, "tools", "stokxl", null, data, r.ping);
-    }
-    // ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (REALTIME)
+// 📊 TOOLS — STOK XL (SCRAPING)
 // ===================================================
-if (category === "tools" && name === "stokcircle") {
+if (category === "tools" && name === "stokxl") {
 
   const r = await fetchHTML("https://juraganxl.my.id/");
-
   if (!r.success) return res.status(504).json(r);
 
-  const html = r.data;
-
-  const clean = html
+  const clean = r.data
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ");
 
-  // 🔎 Cari kode XCLP
-  const idx = [...clean.matchAll(/XCLP\d+/g)].map(m => m.index);
+  const idx = [...clean.matchAll(/XDA\d+/gi)].map(m => m.index);
 
-  let data = [];
+  const data = [];
 
   for (let i = 0; i < idx.length; i++) {
 
     const block = clean.slice(idx[i], idx[i + 1] || clean.length);
 
-    const name = block.match(/XCLP\d+/)?.[0];
+    const name = block.match(/XDA\d+/i)?.[0];
+    if (!name) continue;
 
     const stock =
       block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
       block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
       "0";
 
+    const quotas = [...block.matchAll(/Area\s*(\d+)\s*(\d+)GB/gi)]
+      .map(q => `Area ${q[1]} : ${q[2]}GB`);
+
+    data.push({ name, stock, quotas });
+  }
+
+  return sendResponse(res, "tools", "stokxl", null, data, r.ping);
+}
+
+// ===================================================
+// 📊 TOOLS — STOK CIRCLE / XCL (REALTIME)
+// ===================================================
+if (category === "tools" && name === "stokcircle") {
+
+  const r = await fetchHTML("https://juraganxl.my.id/");
+  if (!r.success) return res.status(504).json(r);
+
+  const clean = r.data
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ");
+
+  const idx = [...clean.matchAll(/XCLP\d+/gi)].map(m => m.index);
+
+  const data = [];
+
+  for (let i = 0; i < idx.length; i++) {
+
+    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+
+    const name = block.match(/XCLP\d+/i)?.[0];
+    if (!name) continue;
+
+    const stock =
+      block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
+      block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
+      "0";
+
+    // 🔥 quota fleksibel (format bebas)
     const quota =
-      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] || null;
+      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
+      block.match(/(\d+\s*GB)/i)?.[1] ||
+      null;
 
     data.push({
       name,
