@@ -362,40 +362,207 @@ function openDetail(c,ep){
     formArea.appendChild(input);
   });
 }
+<script>
 
-async function executeRequest(c,ep){
+// ==============================
+// CONFIG API
+// ==============================
+const apiConfig = {
 
-  const apikey=globalKey.value;
-  if(!apikey) return alert("API key required");
+  drama: {
+    search: { desc: "Cari drama berdasarkan judul", params: ["q"] },
+    episode: { desc: "Ambil daftar episode drama", params: ["id"] }
+  },
+
+  tools: {
+    unban: { desc: "Unban nomor WhatsApp", params: ["number"] },
+    ssweb: { desc: "Screenshot website", params: ["url"] },
+    stokxl: { desc: "Scraping stok XL Akrab Global", params: [] },
+    stokcircle: { desc: "Scraping stok Circle / XCL", params: [] }
+  },
+
+  ai: {
+    chat: { desc: "AI chat sederhana", params: ["q"] },
+    cici: { desc: "AI Dinns", params: ["prompt"] },
+    perplexity: { desc: "AI Perplexity", params: ["prompt"] },
+    turboseek: { desc: "AI TurboSeek", params: ["prompt"] },
+    deepai: { desc: "AI DeepAI", params: ["prompt","type:chat"] }
+  },
+
+  download: {
+    gdrive: { desc: "Download file Google Drive", params: ["url"] },
+    facebook: { desc: "Download video Facebook / Reel", params: ["url"] },
+    instagram: { desc: "Download Instagram Post / Reel", params: ["url"] },
+    capcut: { desc: "Download Video Template CapCut", params: ["url"] },
+    tiktok: { desc: "Download video TikTok", params: ["url"] }
+  }
+
+};
+
+// ==============================
+// ELEMENTS
+// ==============================
+const globalKey = document.getElementById("globalKey");
+const searchBox = document.getElementById("searchBox");
+const categoryScroll = document.getElementById("categoryScroll");
+const listView = document.getElementById("listView");
+const detailView = document.getElementById("detailView");
+
+// ==============================
+// STATE
+// ==============================
+let currentCategory="all";
+let searchText="";
+
+// ==============================
+// API KEY STORAGE
+// ==============================
+const savedKey = localStorage.getItem("apikey");
+if(savedKey) globalKey.value = savedKey;
+
+globalKey.oninput = e =>
+  localStorage.setItem("apikey", e.target.value);
+
+// ==============================
+// SEARCH
+// ==============================
+searchBox.oninput = e => {
+  searchText = e.target.value.toLowerCase();
+  renderList(currentCategory);
+};
+
+// ==============================
+// TOAST
+// ==============================
+function showToast(){
+  const t=document.getElementById("toast");
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1500);
+}
+
+function copyById(id){
+  navigator.clipboard.writeText(
+    document.getElementById(id).textContent
+  ).then(showToast);
+}
+
+// ==============================
+// CATEGORY BUTTONS
+// ==============================
+function generateCategories(){
+
+  const allBtn=createBtn("ALL","all");
+  allBtn.classList.add("active");
+  categoryScroll.appendChild(allBtn);
+
+  for(const c in apiConfig){
+    categoryScroll.appendChild(createBtn(c.toUpperCase(),c));
+  }
+}
+
+function createBtn(text,val){
+  const btn=document.createElement("div");
+  btn.className="category-btn";
+  btn.innerText=text;
+  btn.onclick=()=>selectCategory(val,btn);
+  return btn;
+}
+
+function selectCategory(cat,el){
+  document.querySelectorAll(".category-btn")
+    .forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  currentCategory=cat;
+  renderList(cat);
+}
+
+// ==============================
+// LIST VIEW
+// ==============================
+function renderList(filter="all"){
+
+  listView.innerHTML="";
+  detailView.classList.add("hidden");
+  listView.classList.remove("hidden");
+
+  for(const c in apiConfig){
+
+    if(filter!=="all" && c!==filter) continue;
+
+    for(const ep in apiConfig[c]){
+
+      const data=apiConfig[c][ep];
+      const name=(c+" "+ep).toLowerCase();
+
+      if(searchText && !name.includes(searchText)) continue;
+
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`
+        <div class="badge">GET</div>
+        <div><b>${c} / ${ep}</b></div>
+        <div class="desc">${data.desc}</div>
+      `;
+      card.onclick=()=>openDetail(c,ep);
+      listView.appendChild(card);
+    }
+  }
+}
+
+// ==============================
+// DETAIL VIEW
+// ==============================
+function openDetail(c,ep){
+
+  listView.classList.add("hidden");
+  detailView.classList.remove("hidden");
 
   const data=apiConfig[c][ep];
 
-  let query=`?apikey=${encodeURIComponent(apikey)}&`;
+  detailView.innerHTML=`
+    <div class="card">
+      <div class="back" onclick="renderList('${currentCategory}')">← Back</div>
+      <h2>${c} / ${ep}</h2>
+      <div class="desc">${data.desc}</div>
+      <div id="formArea"></div>
+      <button class="btn" onclick="executeRequest('${c}','${ep}')">Execute</button>
+      <div id="resultArea"></div>
+    </div>
+  `;
 
-  data.params.forEach((p,i)=>{
-    query+=p+"="+encodeURIComponent(document.getElementById(p).value);
-    if(i<data.params.length-1) query+="&";
+  data.params.forEach(p=>{
+    const input=document.createElement("input");
+    input.placeholder=p;
+    input.id=p;
+    formArea.appendChild(input);
+  });
+}
+
+// ==============================
+// EXECUTE REQUEST
+// ==============================
+async function executeRequest(c,ep){
+
+  const apikey = globalKey.value;
+  if(!apikey) return alert("API key required");
+
+  const data = apiConfig[c][ep];
+
+  let query = `?apikey=${encodeURIComponent(apikey)}`;
+
+  data.params.forEach(p=>{
+    const val=document.getElementById(p)?.value || "";
+    query += `&${p}=${encodeURIComponent(val)}`;
   });
 
-  const url=`/api/${c}/${ep}${query}`;
-
-  const fetchCode =
-`fetch('${url}')
-  .then(res => res.json())
-  .then(data => console.log(data));`;
+  const url = `${window.location.origin}/api/${c}/${ep}${query}`;
 
   resultArea.innerHTML="Loading...";
 
-  const res=await fetch(url);
-  const json=await res.json();
+  const res = await fetch(url);
+  const json = await res.json();
 
   resultArea.innerHTML=`
-    <div class="code">
-      <button class="copy-btn" onclick="copyById('reqCode')">Copy</button>
-      <b>REQUEST</b>
-      <pre id="reqCode">${fetchCode}</pre>
-    </div>
-
     <div class="code">
       <button class="copy-btn" onclick="copyById('resCode')">Copy</button>
       <b>RESPONSE</b>
@@ -404,6 +571,9 @@ async function executeRequest(c,ep){
   `;
 }
 
+// ==============================
+// INIT
+// ==============================
 generateCategories();
 renderList();
 
