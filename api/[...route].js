@@ -285,7 +285,52 @@ export default async function handler(req, res) {
 
       return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
+// ===================================================
+// 📊 STOK XL AKRAB SCRAPER
+// ===================================================
+if (category === "tools" && name === "stokxl") {
 
+  const r = await fetchWithTimeout("https://juraganxl.my.id/");
+
+  if (!r.success) return res.status(504).json(r);
+
+  const html = r.data;
+
+  const clean = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ");
+
+  const idx = [...clean.matchAll(/XDA\d+/g)].map(m => m.index);
+
+  let data = [];
+
+  for (let i = 0; i < idx.length; i++) {
+    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
+
+    const name = block.match(/XDA\d+/)?.[0];
+    const stock = block.match(/stock\s*:\s*(\d+)/i)?.[1] || "0";
+
+    const quotas = [...block.matchAll(/Area(\d+)\s*(\d+)GB/gi)]
+      .map(q => `Area ${q[1]} : ${q[2]}GB`);
+
+    data.push({
+      name,
+      stock,
+      quotas
+    });
+  }
+
+  return sendResponse(
+    res,
+    "tools",
+    "stokxl",
+    "JuraganXL Scraper",
+    data,
+    r.ping
+  );
+}
     // ===================================================
     // 📥 GDRIVE
     // ===================================================
