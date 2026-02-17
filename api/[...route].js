@@ -32,7 +32,43 @@ function sendResponse(res, category, endpoint, model, data) {
     data
   });
 }
+async function fetchWithTimeout(url, options = {}, timeout = 14000) {
+  const start = Date.now();
 
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+
+    const data = await res.json();
+
+    const ping = Date.now() - start;
+
+    return {
+      success: true,
+      data,
+      ping
+    };
+
+  } catch (err) {
+
+    const ping = Date.now() - start;
+
+    return {
+      success: false,
+      error: err.name === "AbortError"
+        ? "Request timeout (>14s)"
+        : err.message,
+      ping
+    };
+  } finally {
+    clearTimeout(id);
+  }
+}
 // ======================
 // 🚀 HANDLER
 // ======================
