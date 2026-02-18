@@ -317,8 +317,11 @@ if (category === "tools" && name === "stokxl") {
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
-  const { number } = req.query;
-
+  const number =
+  req.query.number ||
+  req.query.nomor ||
+  req.query.no ||
+  req.query.msisdn;
   if (!number) {
     return res.status(400).json({
       success: false,
