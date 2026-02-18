@@ -331,12 +331,27 @@ if (category === "tools" && name === "cekxl") {
 
   // 🔥 Web checker sumber
   const targetURL =
-    `https://murakata.wuaze.com/cek-kuota.php?nomor=${number}`;
+  "https://murakata.wuaze.com/cek-kuota.php";
 
-  const r = await fetchHTML(targetURL);
+const start = Date.now();
 
-  if (!r.success) return res.status(504).json(r);
+const res2 = await fetch(targetURL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  },
+  body: `nomor=${encodeURIComponent(number)}`
+});
 
+const html = await res2.text();
+
+const r = {
+  success: true,
+  data: html,
+  ping: Date.now() - start
+};
   // ======================
   // CLEAN HTML → TEXT
   // ======================
