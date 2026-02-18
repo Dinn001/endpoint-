@@ -28,7 +28,42 @@ function sendResponse(res, category, endpoint, model, data, ping = null) {
     data
   });
 }
+// ======================
+// 🌐 FETCH POST (SCRAPE FORM)
+// ======================
+async function fetchPOST(url, body, timeout = 14000) {
+  const start = Date.now();
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
 
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36"
+      },
+      body: new URLSearchParams(body)
+    });
+
+    const html = await res.text();
+
+    return { success: true, data: html, ping: Date.now() - start };
+
+  } catch (err) {
+    return {
+      success: false,
+      error: err.name === "AbortError"
+        ? "Request timeout"
+        : err.message,
+      ping: Date.now() - start
+    };
+  } finally {
+    clearTimeout(id);
+  }
+}
 // ======================
 // 🌐 FETCH HTML (SCRAPE)
 // ======================
@@ -311,17 +346,17 @@ if (category === "tools" && name === "stokxl") {
 
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
-
     // ===================================================
-// 📶 CEK KUOTA XL — PRO MAX 😎
+// 📶 CEK KUOTA XL — PRO MAX 😎 (POST)
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
   const number =
-  req.query.number ||
-  req.query.nomor ||
-  req.query.no ||
-  req.query.msisdn;
+    req.query.number ||
+    req.query.nomor ||
+    req.query.no ||
+    req.query.msisdn;
+
   if (!number) {
     return res.status(400).json({
       success: false,
@@ -329,29 +364,14 @@ if (category === "tools" && name === "cekxl") {
     });
   }
 
-  // 🔥 Web checker sumber
-  const targetURL =
-  "https://murakata.wuaze.com/cek-kuota.php";
+  // 🔥 POST ke web checker
+  const r = await fetchPOST(
+    "https://murakata.wuaze.com/cek-kuota.php",
+    { nomor: number }
+  );
 
-const start = Date.now();
+  if (!r.success) return res.status(504).json(r);
 
-const res2 = await fetch(targetURL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-  },
-  body: `nomor=${encodeURIComponent(number)}`
-});
-
-const html = await res2.text();
-
-const r = {
-  success: true,
-  data: html,
-  ping: Date.now() - start
-};
   // ======================
   // CLEAN HTML → TEXT
   // ======================
@@ -367,68 +387,17 @@ const r = {
     return m ? m[1].trim() : null;
   };
 
-  // ======================
-  // BASIC INFO
-  // ======================
   const data = {
     number,
-    operator: pick("Tipe Kartu"),
+    operator: pick("Tipe Kartu") || "XL",
     network: pick("Jaringan"),
     verified: pick("Verif ID"),
     card_age: pick("Umur Kartu"),
     active_until: pick("Masa Aktif"),
     grace_period: pick("Masa Tenggang"),
-    packages: []
+    raw_text: clean
   };
 
-  // ======================
-  // PARSE PAKET + KUOTA
-  // ======================
-  const lines = clean.split("\n");
-
-  let current = null;
-
-  for (const line of lines) {
-
-    // 📦 Paket baru (ada tanggal | nama paket)
-    if (/\d{2}-\d{2}-\d{4}\s*\|/.test(line)) {
-
-      if (current) data.packages.push(current);
-
-      const [date, name] = line.split("|").map(s => s.trim());
-
-      current = {
-        name,
-        valid_until: date,
-        quotas: []
-      };
-
-      continue;
-    }
-
-    // 📊 Kuota (format: used / total)
-    if (/\/\s*\d+/.test(line) && current) {
-
-      const parts = line.split(/\s+/);
-
-      const total = parts.pop();
-      const used = parts.pop();
-
-      const name = parts.join(" ");
-
-      current.quotas.push({
-        name,
-        used,
-        total
-      });
-    }
-  }
-
-  if (current) data.packages.push(current);
-
-  // ======================
-  // RETURN API RESPONSE
-  // ======================
   return sendResponse(
     res,
     "tools",
@@ -438,6 +407,7 @@ const r = {
     r.ping
   );
 }
+    
 //===============
     // 📥 DOWNLOAD
     // ===================================================
