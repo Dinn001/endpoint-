@@ -312,73 +312,62 @@ if (category === "tools" && name === "stokxl") {
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
 
+// ===================================================
+// 📶 CEK KUOTA XL
+// ===================================================
+if (category === "tools" && name === "cekxl") {
 
+  const { number } = req.query;
 
-    // ====================================    // ===================================================
-    // 📶 CEK KUOTA XL
-    // ===================================================
-    if (category === "tools" && endpoint === "cekxl") {
+  if (!number) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter number diperlukan"
+    });
+  }
 
-      if (!number) {
-        return res.status(400).json({
-          success: false,
-          error: "Parameter number diperlukan"
-        });
-      }
+  const url = `https://bendith.my.id/?msisdn=${number}`;
+  const r = await fetchHTML(url);
 
-      // 🔥 GANTI ke web checker kamu
-      const url = `https://bendith.my.id/?msisdn=${number}`;
+  if (!r.success) {
+    return res.status(504).json(r);
+  }
 
-      const r = await fetchHTML(url);
+  const clean = r.data
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, "\n")
+    .replace(/\n+/g, "\n")
+    .trim();
 
-      if (!r.success) {
-        return res.status(504).json(r);
-      }
+  const pick = (label) => {
+    const m = clean.match(new RegExp(label + "\\s*:?\\s*(.+)", "i"));
+    return m ? m[1].trim() : null;
+  };
 
-      const html = r.data;
+  const data = {
+    msisdn: pick("MSISDN"),
+    type: pick("Tipe Kartu"),
+    network: pick("Jaringan"),
+    verify_id: pick("Verif ID"),
+    card_age: pick("Umur Kartu"),
+    active_until: pick("Masa Aktif"),
+    grace_period: pick("Masa Tenggang"),
+    volte_area: pick("Volte Area"),
+    volte_sim: pick("Volte Simcard"),
+    volte_device: pick("Volte Perangkat"),
+    raw: clean
+  };
 
-      // ======================
-      // CLEAN TEXT
-      // ======================
-      const clean = html
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[\s\S]*?<\/style>/gi, "")
-        .replace(/<[^>]*>/g, "\n")
-        .replace(/\n+/g, "\n")
-        .trim();
-
-      // ======================
-      // EXTRACT INFO
-      // ======================
-      const pick = (label) => {
-        const m = clean.match(new RegExp(label + "\\s*:?\\s*(.+)", "i"));
-        return m ? m[1].trim() : null;
-      };
-
-      const data = {
-        msisdn: pick("MSISDN"),
-        type: pick("Tipe Kartu"),
-        network: pick("Jaringan"),
-        verify_id: pick("Verif ID"),
-        card_age: pick("Umur Kartu"),
-        active_until: pick("Masa Aktif"),
-        grace_period: pick("Masa Tenggang"),
-        volte_area: pick("Volte Area"),
-        volte_sim: pick("Volte Simcard"),
-        volte_device: pick("Volte Perangkat"),
-
-        raw: clean // full text kuota
-      };
-
-      return sendResponse(
-        res,
-        "tools",
-        "cekxl",
-        "XL Checker",
-        data,
-        r.ping
-      );
-    }
+  return sendResponse(
+    res,
+    "tools",
+    "cekxl",
+    "XL Checker",
+    data,
+    r.ping
+  );
+}
 //===============
     // 📥 DOWNLOAD
     // ===================================================
