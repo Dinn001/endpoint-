@@ -312,8 +312,8 @@ if (category === "tools" && name === "stokxl") {
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
 
-// ===================================================
-// 📶 CEK KUOTA XL
+    // ===================================================
+// 📶 CEK KUOTA XL — PRO MAX 😎
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
@@ -326,13 +326,17 @@ if (category === "tools" && name === "cekxl") {
     });
   }
 
-  const url = `https://bendith.my.id/?msisdn=${number}`;
-  const r = await fetchHTML(url);
+  // 🔥 Web checker sumber
+  const targetURL =
+    `https://murakata.wuaze.com/cek-kuota.php?nomor=${number}`;
 
-  if (!r.success) {
-    return res.status(504).json(r);
-  }
+  const r = await fetchHTML(targetURL);
 
+  if (!r.success) return res.status(504).json(r);
+
+  // ======================
+  // CLEAN HTML → TEXT
+  // ======================
   const clean = r.data
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -345,25 +349,73 @@ if (category === "tools" && name === "cekxl") {
     return m ? m[1].trim() : null;
   };
 
+  // ======================
+  // BASIC INFO
+  // ======================
   const data = {
-    msisdn: pick("MSISDN"),
-    type: pick("Tipe Kartu"),
+    number,
+    operator: pick("Tipe Kartu"),
     network: pick("Jaringan"),
-    verify_id: pick("Verif ID"),
+    verified: pick("Verif ID"),
     card_age: pick("Umur Kartu"),
     active_until: pick("Masa Aktif"),
     grace_period: pick("Masa Tenggang"),
-    volte_area: pick("Volte Area"),
-    volte_sim: pick("Volte Simcard"),
-    volte_device: pick("Volte Perangkat"),
-    raw: clean
+    packages: []
   };
 
+  // ======================
+  // PARSE PAKET + KUOTA
+  // ======================
+  const lines = clean.split("\n");
+
+  let current = null;
+
+  for (const line of lines) {
+
+    // 📦 Paket baru (ada tanggal | nama paket)
+    if (/\d{2}-\d{2}-\d{4}\s*\|/.test(line)) {
+
+      if (current) data.packages.push(current);
+
+      const [date, name] = line.split("|").map(s => s.trim());
+
+      current = {
+        name,
+        valid_until: date,
+        quotas: []
+      };
+
+      continue;
+    }
+
+    // 📊 Kuota (format: used / total)
+    if (/\/\s*\d+/.test(line) && current) {
+
+      const parts = line.split(/\s+/);
+
+      const total = parts.pop();
+      const used = parts.pop();
+
+      const name = parts.join(" ");
+
+      current.quotas.push({
+        name,
+        used,
+        total
+      });
+    }
+  }
+
+  if (current) data.packages.push(current);
+
+  // ======================
+  // RETURN API RESPONSE
+  // ======================
   return sendResponse(
     res,
     "tools",
     "cekxl",
-    "XL Checker",
+    "XL Checker PRO MAX 😎",
     data,
     r.ping
   );
