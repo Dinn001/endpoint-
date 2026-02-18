@@ -274,6 +274,7 @@ export default async function handler(req, res) {
     }
 
     // ===================================================
+// ===================================================
 // 📊 TOOLS — STOK XL (SCRAPING)
 // ===================================================
 if (category === "tools" && name === "stokxl") {
@@ -288,7 +289,6 @@ if (category === "tools" && name === "stokxl") {
     .replace(/\s+/g, " ");
 
   const idx = [...clean.matchAll(/XDA\d+/gi)].map(m => m.index);
-
   const data = [];
 
   for (let i = 0; i < idx.length; i++) {
@@ -310,8 +310,11 @@ if (category === "tools" && name === "stokxl") {
   }
 
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
+}
+
+
 // ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (AUTO MODE)
+// 📊 TOOLS — STOK CIRCLE / XCL (AUTO ALL + SINGLE)
 // ===================================================
 if (category === "tools" && name === "stokcircle") {
 
@@ -327,7 +330,6 @@ if (category === "tools" && name === "stokcircle") {
     .replace(/\s+/g, " ");
 
   const idx = [...clean.matchAll(/XCLP\d+/gi)].map(m => m.index);
-
   const data = [];
 
   for (let i = 0; i < idx.length; i++) {
@@ -375,18 +377,7 @@ if (category === "tools" && name === "stokcircle") {
     data,
     r.ping
   );
-}}
-
-// ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (CEK 1 KODE REALTIME)
-// ===================================================
-if (category === "tools" && name === "stokcircle") {
-
-  const { kode } = req.query;
-
-  if (!kode) {
-    return res.status(400).json({
-
+}
     // ===================================================
     // 📥 DOWNLOAD
     // ===================================================
