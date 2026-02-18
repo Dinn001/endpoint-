@@ -313,72 +313,73 @@ if (category === "tools" && name === "stokxl") {
 }
 
 
-// ===================================================
-// 📊 TOOLS — STOK CIRCLE / XCL (AUTO ALL + SINGLE)
-// ===================================================
-if (category === "tools" && name === "stokcircle") {
 
-  const { kode } = req.query; // optional
-
-  const r = await fetchHTML("https://juraganxl.my.id/");
-  if (!r.success) return res.status(504).json(r);
-
-  const clean = r.data
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ");
-
-  const idx = [...clean.matchAll(/XCLP\d+/gi)].map(m => m.index);
-  const data = [];
-
-  for (let i = 0; i < idx.length; i++) {
-
-    const block = clean.slice(idx[i], idx[i + 1] || clean.length);
-
-    const name = block.match(/XCLP\d+/i)?.[0];
-    if (!name) continue;
-
-    const stock =
-      block.match(/stock\s*:\s*(\d+)/i)?.[1] ||
-      block.match(/stok\s*:\s*(\d+)/i)?.[1] ||
-      "0";
-
-    const quota =
-      block.match(/(\d+\s*GB\s*-\s*\d+\s*GB)/i)?.[1] ||
-      block.match(/(\d+\s*GB)/i)?.[1] ||
-      null;
-
-    data.push({ name, stock, quota });
-  }
-
-  // 🔎 MODE SINGLE
-  if (kode) {
-    const found = data.find(
-      v => v.name.toLowerCase() === kode.toLowerCase()
-    );
-
-    return sendResponse(
-      res,
-      "tools",
-      "stokcircle",
-      null,
-      found || null,
-      r.ping
-    );
-  }
-
-  // 🌐 MODE ALL
-  return sendResponse(
-    res,
-    "tools",
-    "stokcircle",
-    null,
-    data,
-    r.ping
-  );
-}
+    // ====================================    // ===================================================
+    // 📶 CEK KUOTA XL
     // ===================================================
+    if (category === "tools" && endpoint === "cekxl") {
+
+      if (!number) {
+        return res.status(400).json({
+          success: false,
+          error: "Parameter number diperlukan"
+        });
+      }
+
+      // 🔥 GANTI ke web checker kamu
+      const url = `https://bendith.my.id/?msisdn=${number}`;
+
+      const r = await fetchHTML(url);
+
+      if (!r.success) {
+        return res.status(504).json(r);
+      }
+
+      const html = r.data;
+
+      // ======================
+      // CLEAN TEXT
+      // ======================
+      const clean = html
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]*>/g, "\n")
+        .replace(/\n+/g, "\n")
+        .trim();
+
+      // ======================
+      // EXTRACT INFO
+      // ======================
+      const pick = (label) => {
+        const m = clean.match(new RegExp(label + "\\s*:?\\s*(.+)", "i"));
+        return m ? m[1].trim() : null;
+      };
+
+      const data = {
+        msisdn: pick("MSISDN"),
+        type: pick("Tipe Kartu"),
+        network: pick("Jaringan"),
+        verify_id: pick("Verif ID"),
+        card_age: pick("Umur Kartu"),
+        active_until: pick("Masa Aktif"),
+        grace_period: pick("Masa Tenggang"),
+        volte_area: pick("Volte Area"),
+        volte_sim: pick("Volte Simcard"),
+        volte_device: pick("Volte Perangkat"),
+
+        raw: clean // full text kuota
+      };
+
+      return sendResponse(
+        res,
+        "tools",
+        "cekxl",
+        "XL Checker",
+        data,
+        r.ping
+      );
+    }
+//===============
     // 📥 DOWNLOAD
     // ===================================================
     if (category === "download" && name === "gdrive") {
