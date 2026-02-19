@@ -675,14 +675,11 @@ if (category === "tools" && name === "cekxl") {
       );
     }
 // ===================================================
-// 🧷 STICKER — BRAT GENERATOR
+// 😈 STICKER — BRAT TEXT
 // ===================================================
 if (category === "sticker" && name === "brat") {
 
-  const text =
-    req.query.text ||
-    req.query.q ||
-    req.query.prompt;
+  const { text } = req.query;
 
   if (!text) {
     return res.status(400).json({
@@ -691,22 +688,28 @@ if (category === "sticker" && name === "brat") {
     });
   }
 
-  // 🔥 API sumber
   const apiUrl =
     `https://apikey-fyxzpedia.vercel.app/imagecreator/bratv?apikey=Fyxz&text=${encodeURIComponent(text)}`;
 
-  const r = await fetchJSON(apiUrl);
+  const start = Date.now();
 
-  if (!r.success) return res.status(504).json(r);
+  const response = await fetch(apiUrl);
 
-  const resultUrl =
-    r.data?.url ||
-    r.data?.result ||
-    null;
+  if (!response.ok) {
+    return res.status(502).json({
+      success: false,
+      error: "Gagal membuat sticker brat"
+    });
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  const base64 =
+    `data:image/png;base64,${buffer.toString("base64")}`;
 
   const data = {
     text,
-    sticker_url: resultUrl
+    image_base64: base64
   };
 
   return sendResponse(
@@ -715,10 +718,12 @@ if (category === "sticker" && name === "brat") {
     "brat",
     "Brat Sticker Generator",
     data,
-    r.ping
+    Date.now() - start
   );
 }
-    // ===================================================
+
+
+// ===================================================
 // 😀 STICKER — EMOJIMIX
 // ===================================================
 if (category === "sticker" && name === "emojimix") {
@@ -733,23 +738,29 @@ if (category === "sticker" && name === "emojimix") {
     });
   }
 
-  // 🔥 API sumber
   const apiUrl =
     `https://apikey-fyxzpedia.vercel.app/tools/emojimix?apikey=Fyxz&emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
 
-  const r = await fetchJSON(apiUrl);
+  const start = Date.now();
 
-  if (!r.success) return res.status(504).json(r);
+  const response = await fetch(apiUrl);
 
-  const resultUrl =
-    r.data?.url ||
-    r.data?.result ||
-    null;
+  if (!response.ok) {
+    return res.status(502).json({
+      success: false,
+      error: "Gagal mengambil gambar emojimix"
+    });
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  const base64 =
+    `data:image/png;base64,${buffer.toString("base64")}`;
 
   const data = {
     emoji1,
     emoji2,
-    sticker_url: resultUrl
+    image_base64: base64
   };
 
   return sendResponse(
@@ -758,7 +769,7 @@ if (category === "sticker" && name === "emojimix") {
     "emojimix",
     "Emoji Mix Generator",
     data,
-    r.ping
+    Date.now() - start
   );
 }
     // ===================================================
