@@ -319,6 +319,55 @@ if (category === "search" && name === "pinterest") {
     r.ping
   );
 }
+    // ===================================================
+// 🔎 SEARCH — GOOGLE IMAGE
+// ===================================================
+if (category === "search" && name === "gimage") {
+
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q diperlukan"
+    });
+  }
+
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/search/gimage?apikey=Fyxz&q=${encodeURIComponent(q)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const images = r.data?.result?.images || [];
+
+  if (!Array.isArray(images) || images.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: "Gambar tidak ditemukan"
+    });
+  }
+
+  // 🔥 Ambil 5 gambar valid pertama
+  const results = images
+    .filter(img => img?.imageUrl && img.imageUrl.length > 5)
+    .slice(0, 5)
+    .map(img => img.imageUrl);
+
+  return sendResponse(
+    res,
+    "search",
+    "gimage",
+    "Google Image Search",
+    {
+      query: q,
+      total: images.length,
+      images: results
+    },
+    r.ping
+  );
+}
 // ===================================================
 // 🔎 YOUTUBE SEARCH
 // ===================================================
