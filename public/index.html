@@ -69,16 +69,21 @@ const apiConfig = {
         deepai: { desc: "AI DeepAI", params: ["prompt", "type"] }
     },
     search: {
-  youtube: {
-    desc: "Cari video YouTube",
-    params: ["q"]
-  },
+        youtube: {
+            desc: "Cari video YouTube",
+            params: ["q"]
+        },
 
-  pinterest: {
-    desc: "Cari gambar Pinterest",
-    params: ["q"]
-  }
-},
+        pinterest: {
+            desc: "Cari gambar Pinterest",
+            params: ["q"]
+        },
+
+        gimage: { // 🔥 dipindah ke dalam search
+            desc: "Cari gambar Google Image",
+            params: ["q"]
+        }
+    },
     download: {
         gdrive: { desc: "Download file Google Drive", params: ["url"] },
         facebook: { desc: "Download video Facebook / Reel", params: ["url"] },
