@@ -59,7 +59,7 @@ const apiConfig = {
         unban: { desc: "Unban nomor WhatsApp", params: ["number"] },
         ssweb: { desc: "Screenshot website", params: ["url"] },
         stokxl: { desc: "Stok XL Akrab Global", params: [] },
- cekxl: { desc: "Cek Kuota Xl Axia",params: ["Number"] }
+ cekxl: { desc: "Cek Kuota Xl Axia",params: ["number"] }
     },
     ai: {
         chat: { desc: "AI chat sederhana", params: ["q"] },
@@ -68,6 +68,12 @@ const apiConfig = {
         turboseek: { desc: "AI TurboSeek", params: ["prompt"] },
         deepai: { desc: "AI DeepAI", params: ["prompt", "type"] }
     },
+    search: {
+  youtube: {
+    desc: "Cari video YouTube",
+    params: ["q"]
+  }
+},
     download: {
         gdrive: { desc: "Download file Google Drive", params: ["url"] },
         facebook: { desc: "Download video Facebook / Reel", params: ["url"] },
