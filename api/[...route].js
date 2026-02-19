@@ -368,7 +368,7 @@ if (category === "tools" && name === "stokxl") {
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ");
+  .replace(/\s+/g, " ");
 
   const idx = [...clean.matchAll(/XDA\d+/gi)].map(m => m.index);
   const data = [];
@@ -394,7 +394,7 @@ if (category === "tools" && name === "stokxl") {
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
     // ===================================================
-// 📶 CEK KUOTA XL — PRO MAX 😎 (POST SCRAPER)
+// 📶 CEK KUOTA XL — PRO MAX FINAL 😎
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
@@ -413,7 +413,6 @@ if (category === "tools" && name === "cekxl") {
 
   const start = Date.now();
 
-  // 🔥 POST request ke web checker
   const response = await fetch(
     "https://murakata.wuaze.com/cek-kuota.php",
     {
@@ -421,9 +420,14 @@ if (category === "tools" && name === "cekxl") {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Referer": "https://murakata.wuaze.com/",
+        "Origin": "https://murakata.wuaze.com"
       },
-      body: `nomor=${encodeURIComponent(number)}`
+
+      // 🔥 PARAMETER WAJIB
+      body: `nomor=${encodeURIComponent(number)}&i=1`
+      // i=1 = V1 XL
     }
   );
 
@@ -452,9 +456,7 @@ if (category === "tools" && name === "cekxl") {
     card_age: pick("Umur Kartu"),
     active_until: pick("Aktif Sampai") || pick("Masa Aktif"),
     grace_period: pick("Masa Tenggang"),
-    message: clean.includes("tidak memiliki paket")
-      ? "Tidak ada paket aktif"
-      : null
+    raw_text: clean
   };
 
   return sendResponse(
@@ -466,7 +468,7 @@ if (category === "tools" && name === "cekxl") {
     Date.now() - start
   );
 }
-    
+  
 //===============
     // 📥 DOWNLOAD
     // ===================================================
