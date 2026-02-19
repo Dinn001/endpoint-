@@ -1,0 +1,43 @@
+export const API_USERS = {
+
+  // 👑 OWNER — UNLIMITED
+  "yttasu": {
+    name: "Dinns Owner",
+    role: "owner",
+    limit: Infinity,
+    used: 0
+  },
+
+  // 🧑 FREE USER 1
+  "free_key_1": {
+    name: "Free User 1",
+    role: "free",
+    limit: 100,
+    used: 0
+  },
+
+  // 🧑 FREE USER 2
+  "free_key_2": {
+    name: "Free User 2",
+    role: "free",
+    limit: 100,
+    used: 0
+  },
+
+  // 💎 PREMIUM USER 1
+  "premium_key_1": {
+    name: "Premium User 1",
+    role: "premium",
+    limit: 1000,
+    used: 0
+  },
+
+  // 💎 PREMIUM USER 2
+  "premium_key_2": {
+    name: "Premium User 2",
+    role: "premium",
+    limit: 5,
+    used: 0
+  }
+
+};
