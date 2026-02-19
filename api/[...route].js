@@ -1,3 +1,4 @@
+import { API_USERS } from "../database.js";
 // ======================
 // 🆔 RANDOM ID
 // ======================
@@ -134,12 +135,24 @@ export default async function handler(req, res) {
   try {
 
     const { apikey } = req.query;
-    if (apikey !== "dinns_key") {
+
+    const user = API_USERS[apikey];
+
+    if (!user) {
       return res.status(403).json({
         success: false,
         error: "Invalid API key"
       });
     }
+
+    if (user.limit !== Infinity && user.used >= user.limit) {
+      return res.status(429).json({
+        success: false,
+        error: "Limit penggunaan habis"
+      });
+    }
+
+    user.used++;
 
     const pathname = req.url.split("?")[0];
     const path = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
