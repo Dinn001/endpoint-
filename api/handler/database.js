@@ -1,14 +1,15 @@
-export const API_USERS = {
+// ======================
+// 🧠 DATABASE API USERS
+// ======================
+const API_USERS = {
 
-  // 👑 OWNER — UNLIMITED
-  "yttasu": {
+  "dinns_key": {
     name: "Dinns Owner",
     role: "owner",
-    limit: Infinity,
+    limit: "unlimited",
     used: 0
   },
 
-  // 🧑 FREE USER 1
   "free_key_1": {
     name: "Free User 1",
     role: "free",
@@ -16,7 +17,6 @@ export const API_USERS = {
     used: 0
   },
 
-  // 🧑 FREE USER 2
   "free_key_2": {
     name: "Free User 2",
     role: "free",
@@ -24,7 +24,6 @@ export const API_USERS = {
     used: 0
   },
 
-  // 💎 PREMIUM USER 1
   "premium_key_1": {
     name: "Premium User 1",
     role: "premium",
@@ -32,7 +31,6 @@ export const API_USERS = {
     used: 0
   },
 
-  // 💎 PREMIUM USER 2
   "premium_key_2": {
     name: "Premium User 2",
     role: "premium",
@@ -41,3 +39,11 @@ export const API_USERS = {
   }
 
 };
+
+export default function handler(req, res) {
+  res.status(200).json({
+    success: true,
+    api: "Dinns API",
+    data: API_USERS
+  });
+}
