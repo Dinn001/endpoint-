@@ -154,10 +154,10 @@ export default async function handler(req, res) {
 
     user.used++;
 
-    const route = req.query.route || [];
+    const route = req.query.route;
 
-const category = route[0] || "unknown";
-const name = route[1] || "unknown";
+const category = route?.[0] || "unknown";
+const name = route?.[1] || "unknown";
     // ===================================================
     // 🤖 AI CHAT (LOCAL)
     // ===================================================
@@ -763,7 +763,10 @@ if (category === "sticker" && name === "emojimix") {
     });
   }
 
-  const buffer = Buffer.from(await response.arrayBuffer());
+  const arrayBuffer = await response.arrayBuffer();
+const base64 = `data:image/png;base64,${btoa(
+  String.fromCharCode(...new Uint8Array(arrayBuffer))
+)}`;
 
   const base64 =
     `data:image/png;base64,${buffer.toString("base64")}`;
