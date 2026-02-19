@@ -273,6 +273,52 @@ export default async function handler(req, res) {
       if (!r.success) return res.status(504).json(r);
       return sendResponse(res, "drama", "episode", null, r.data, r.ping);
     }
+    // ===================================================
+// 📌 SEARCH — PINTEREST
+// ===================================================
+if (category === "search" && name === "pinterest") {
+
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q diperlukan"
+    });
+  }
+
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/search/pinterest?apikey=Fyxz&q=${encodeURIComponent(q)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.result || [];
+
+  if (!Array.isArray(result) || result.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: "Gambar tidak ditemukan"
+    });
+  }
+
+  // 🔥 Ambil 5 gambar pertama
+  const images = result.slice(0, 5);
+
+  return sendResponse(
+    res,
+    "search",
+    "pinterest",
+    "Pinterest Search",
+    {
+      query: q,
+      total: result.length,
+      images
+    },
+    r.ping
+  );
+}
 // ===================================================
 // 🔎 YOUTUBE SEARCH
 // ===================================================
