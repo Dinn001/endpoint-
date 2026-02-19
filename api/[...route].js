@@ -273,7 +273,54 @@ export default async function handler(req, res) {
       if (!r.success) return res.status(504).json(r);
       return sendResponse(res, "drama", "episode", null, r.data, r.ping);
     }
+// ===================================================
+// 🔎 YOUTUBE SEARCH
+// ===================================================
+if (category === "search" && name === "youtube") {
 
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q diperlukan"
+    });
+  }
+
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/search/youtube?apikey=Fyxz&q=${encodeURIComponent(q)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.result?.[0];
+
+  if (!result) {
+    return res.status(404).json({
+      success: false,
+      error: "Video tidak ditemukan"
+    });
+  }
+
+  const data = {
+    title: result.title,
+    url: result.url,
+    duration: result.duration,
+    views: result.views,
+    channel: result.author?.name || null,
+    thumbnail: result.thumbnail
+  };
+
+  return sendResponse(
+    res,
+    "search",
+    "youtube",
+    "YouTube Search",
+    data,
+    r.ping
+  );
+}
     // ===================================================
     // 🛠 TOOLS
     // ===================================================
