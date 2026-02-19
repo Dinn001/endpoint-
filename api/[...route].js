@@ -674,7 +674,93 @@ if (category === "tools" && name === "cekxl") {
         r.ping
       );
     }
+// ===================================================
+// 🧷 STICKER — BRAT GENERATOR
+// ===================================================
+if (category === "sticker" && name === "brat") {
 
+  const text =
+    req.query.text ||
+    req.query.q ||
+    req.query.prompt;
+
+  if (!text) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter text diperlukan"
+    });
+  }
+
+  // 🔥 API sumber
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/imagecreator/bratv?apikey=Fyxz&text=${encodeURIComponent(text)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const resultUrl =
+    r.data?.url ||
+    r.data?.result ||
+    null;
+
+  const data = {
+    text,
+    sticker_url: resultUrl
+  };
+
+  return sendResponse(
+    res,
+    "sticker",
+    "brat",
+    "Brat Sticker Generator",
+    data,
+    r.ping
+  );
+}
+    // ===================================================
+// 😀 STICKER — EMOJIMIX
+// ===================================================
+if (category === "sticker" && name === "emojimix") {
+
+  const emoji1 = req.query.emoji1 || req.query.e1;
+  const emoji2 = req.query.emoji2 || req.query.e2;
+
+  if (!emoji1 || !emoji2) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter emoji1 dan emoji2 diperlukan"
+    });
+  }
+
+  // 🔥 API sumber
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/tools/emojimix?apikey=Fyxz&emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const resultUrl =
+    r.data?.url ||
+    r.data?.result ||
+    null;
+
+  const data = {
+    emoji1,
+    emoji2,
+    sticker_url: resultUrl
+  };
+
+  return sendResponse(
+    res,
+    "sticker",
+    "emojimix",
+    "Emoji Mix Generator",
+    data,
+    r.ping
+  );
+}
     // ===================================================
     // ❌ DEFAULT
     // ===================================================
