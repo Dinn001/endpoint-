@@ -786,14 +786,14 @@ if (category === "sticker" && name === "emojimix") {
   );
 }
     // ===================================================
-    // ❌ DEFAULT
-    // ===================================================
-    return res.status(404).json({
-      success: false,
-      error: "Endpoint not found",
-      category,
-      endpoint: name
-    });
+// ❌ DEFAULT
+// ===================================================
+return res.status(404).json({
+  success: false,
+  error: "Endpoint not found",
+  category,
+  endpoint: name
+});
 
   } catch (err) {
     res.status(500).json({
