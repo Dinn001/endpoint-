@@ -394,7 +394,7 @@ if (category === "tools" && name === "stokxl") {
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
     // ===================================================
-// 📶 CEK KUOTA XL — PRO MAX 😎 (POST)
+// 📶 CEK KUOTA XL — PRO MAX 😎 (POST SCRAPER)
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
@@ -411,18 +411,28 @@ if (category === "tools" && name === "cekxl") {
     });
   }
 
-  // 🔥 POST ke web checker
-  const r = await fetchPOST(
+  const start = Date.now();
+
+  // 🔥 POST request ke web checker
+  const response = await fetch(
     "https://murakata.wuaze.com/cek-kuota.php",
-    { nomor: number }
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      },
+      body: `nomor=${encodeURIComponent(number)}`
+    }
   );
 
-  if (!r.success) return res.status(504).json(r);
+  const html = await response.text();
 
   // ======================
   // CLEAN HTML → TEXT
   // ======================
-  const clean = r.data
+  const clean = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]*>/g, "\n")
@@ -436,13 +446,15 @@ if (category === "tools" && name === "cekxl") {
 
   const data = {
     number,
-    operator: pick("Tipe Kartu") || "XL",
+    operator: pick("Operator") || pick("Tipe Kartu"),
     network: pick("Jaringan"),
-    verified: pick("Verif ID"),
+    verified: pick("ID Terverifikasi") || pick("Verif ID"),
     card_age: pick("Umur Kartu"),
-    active_until: pick("Masa Aktif"),
+    active_until: pick("Aktif Sampai") || pick("Masa Aktif"),
     grace_period: pick("Masa Tenggang"),
-    raw_text: clean
+    message: clean.includes("tidak memiliki paket")
+      ? "Tidak ada paket aktif"
+      : null
   };
 
   return sendResponse(
@@ -451,7 +463,7 @@ if (category === "tools" && name === "cekxl") {
     "cekxl",
     "XL Checker PRO MAX 😎",
     data,
-    r.ping
+    Date.now() - start
   );
 }
     
