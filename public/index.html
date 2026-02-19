@@ -216,35 +216,51 @@ function openDetail(c, ep) {
 
 async function executeRequest(c, ep) {
     const apikey = globalKey.value;
-    if (!apikey) return alert("Silahkan isi API Key terlebih dahulu!");
+    if (!apikey) return alert("Isi API Key dulu!");
 
     const data = apiConfig[c][ep];
     const resultArea = document.getElementById("resultArea");
-    
-    // Build Query
+
     let query = `?apikey=${encodeURIComponent(apikey)}`;
+
     data.params.forEach(p => {
         const val = document.getElementById("param-" + p)?.value || "";
         query += `&${p}=${encodeURIComponent(val)}`;
     });
 
     const url = `${window.location.origin}/api/${c}/${ep}${query}`;
+
     resultArea.innerHTML = "<p style='margin-top:20px'>Memproses...</p>";
 
     try {
         const res = await fetch(url);
-        const json = await res.json();
+        const text = await res.text();
+
+        let json;
+
+        try {
+            json = JSON.parse(text);
+        } catch {
+            resultArea.innerHTML = `
+                <div class="code" style="color:#ff4444">
+                    ⚠️ Server tidak mengembalikan JSON<br><br>
+                    ${text}
+                </div>`;
+            return;
+        }
+
         resultArea.innerHTML = `
             <div class="code">
                 <button class="copy-btn" onclick="copyById('resCode')">Copy</button>
                 <b style="color:#8b5cf6">JSON RESPONSE:</b><br><br>
                 <span id="resCode">${JSON.stringify(json, null, 2)}</span>
             </div>`;
+
     } catch (err) {
-        resultArea.innerHTML = `<div class="code" style="color:#ff4444">Error: ${err.message}</div>`;
+        resultArea.innerHTML =
+            `<div class="code" style="color:#ff4444">Error: ${err.message}</div>`;
     }
 }
-
 // 4. INIT
 generateCategories();
 renderList();
