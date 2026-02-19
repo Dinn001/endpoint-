@@ -154,12 +154,10 @@ export default async function handler(req, res) {
 
     user.used++;
 
-    const pathname = req.url.split("?")[0];
-    const path = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
+    const route = req.query.route || [];
 
-    const category = path[0] || "unknown";
-    const name = path[1] || "unknown";
-
+const category = route[0] || "unknown";
+const name = route[1] || "unknown";
     // ===================================================
     // 🤖 AI CHAT (LOCAL)
     // ===================================================
@@ -796,9 +794,11 @@ return res.status(404).json({
 });
 
   } catch (err) {
-    res.status(500).json({
+    console.error("API ERROR:", err);
+
+    return res.status(500).json({
       success: false,
-      error: err.message
+      error: err.message || "Internal Server Error"
     });
   }
 }
