@@ -1,7 +1,7 @@
 // ======================
 // 🧠 DATABASE API USERS
 // ======================
-const API_USERS = {
+export const API_USERS = {
 
   "dinns_key": {
     name: "Dinns Owner",
