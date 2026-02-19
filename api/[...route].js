@@ -768,9 +768,10 @@ if (category === "sticker" && name === "emojimix") {
 
   const arrayBuffer = await response.arrayBuffer();
 
-const base64 = `data:image/png;base64,${btoa(
-  String.fromCharCode(...new Uint8Array(arrayBuffer))
-)}`;
+  const base64 = `data:image/png;base64,${btoa(
+    String.fromCharCode(...new Uint8Array(arrayBuffer))
+  )}`;
+
   const data = {
     emoji1,
     emoji2,
