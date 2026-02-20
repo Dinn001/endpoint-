@@ -69,24 +69,36 @@ const apiConfig = {
         deepai: { desc: "AI DeepAI", params: ["prompt", "type"] }
     },
     search: {
-        youtube: {
-            desc: "Cari video YouTube",
-            params: ["q"]
-        },
-
-        pinterest: {
-            desc: "Cari gambar Pinterest",
-            params: ["q"]
-        },
-        ttsearch: {
-  desc: "Cari video TikTok",
-  params: ["q"]
-        },
-        gimage: { // 🔥 dipindah ke dalam search
-            desc: "Cari gambar Google Image",
-            params: ["q"]
-        }
+    youtube: {
+        desc: "Cari video YouTube",
+        params: ["q"]
     },
+
+    pinterest: {
+        desc: "Cari gambar Pinterest",
+        params: ["q"]
+    },
+
+    ttsearch: {
+        desc: "Cari video TikTok",
+        params: ["q"]
+    },
+
+    gimage: {
+        desc: "Cari gambar Google Image",
+        params: ["q"]
+    },
+
+    jadwalsholat: {
+        desc: "Jadwal sholat berdasarkan kota",
+        params: ["q"]
+    },
+
+    surah: {
+        desc: "Ambil ayat Al-Quran berdasarkan nama surah",
+        params: ["surah"]
+    }
+},
     sticker: {
   brat: {
     desc: "Generate sticker brat dari teks",
