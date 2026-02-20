@@ -154,9 +154,20 @@ export default async function handler(req, res) {
 
     user.used++;
 
-    let route = req.query.route;
+    // ======================
+// 📍 ROUTING UNIVERSAL FIX
+// ======================
 
-if (!route) route = [];
+// Ambil dari query dulu
+let route = req.query.route;
+
+// Jika tidak ada, parse dari URL manual
+if (!route) {
+  const pathname = req.url.split("?")[0];
+  route = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
+}
+
+// Jika string → ubah jadi array
 if (typeof route === "string") route = [route];
 
 const category = route[0] || "unknown";
