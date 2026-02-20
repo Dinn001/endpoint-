@@ -172,24 +172,7 @@ if (typeof route === "string") route = [route];
 
 const category = route[0] || "unknown";
 const name = route[1] || "unknown";
-    if (category === "admin" && name === "users") {
 
-  if (!user || user.role !== "owner") {
-    return res.status(401).json({
-      success: false,
-      error: "Owner only"
-    });
-  }
-
-  return sendResponse(
-    res,
-    "admin",
-    "users",
-    "Admin Panel",
-    API_USERS,
-    0
-  );
-    }
     // ===================================================
     // 🤖 AI CHAT (LOCAL)
     // ===================================================
@@ -204,6 +187,34 @@ const name = route[1] || "unknown";
         0
       );
     }
+    // ===================================================
+// 👑 ADMIN PANEL DATA
+// ===================================================
+if (category === "admin") {
+
+  // hanya OWNER boleh akses
+  if (user.role !== "owner") {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  const users = Object.entries(API_USERS).map(([key, u]) => ({
+    apikey: key,
+    name: u.name,
+    role: u.role,
+    limit: u.limit === Infinity ? "Unlimited" : u.limit,
+    used: u.used,
+    remaining: u.limit === Infinity ? "Unlimited" : (u.limit - u.used)
+  }));
+
+  return res.json({
+    success: true,
+    total: users.length,
+    users
+  });
+}
 
     // ===================================================
     // 🤖 CICI
