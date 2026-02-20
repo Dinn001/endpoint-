@@ -154,9 +154,10 @@ export default async function handler(req, res) {
 
     user.used++;
 
-    const route = Array.isArray(req.query.route)
-  ? req.query.route
-  : [req.query.route];
+    let route = req.query.route;
+
+if (!route) route = [];
+if (typeof route === "string") route = [route];
 
 const category = route[0] || "unknown";
 const name = route[1] || "unknown";
