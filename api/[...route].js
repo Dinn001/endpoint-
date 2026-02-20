@@ -172,6 +172,24 @@ if (typeof route === "string") route = [route];
 
 const category = route[0] || "unknown";
 const name = route[1] || "unknown";
+    if (category === "admin" && name === "users") {
+
+  if (!user || user.role !== "owner") {
+    return res.status(401).json({
+      success: false,
+      error: "Owner only"
+    });
+  }
+
+  return sendResponse(
+    res,
+    "admin",
+    "users",
+    "Admin Panel",
+    API_USERS,
+    0
+  );
+    }
     // ===================================================
     // 🤖 AI CHAT (LOCAL)
     // ===================================================
