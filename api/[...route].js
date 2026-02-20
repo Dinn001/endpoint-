@@ -442,6 +442,59 @@ if (category === "search" && name === "youtube") {
   );
 }
     // ===================================================
+// 🎵 SEARCH — TIKTOK (TTSEARCH)
+// ===================================================
+if (category === "search" && name === "ttsearch") {
+
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q diperlukan"
+    });
+  }
+
+  const apiUrl =
+    `https://apikey-fyxzpedia.vercel.app/search/tiktok?apikey=Fyxz&q=${encodeURIComponent(q)}`;
+
+  const r = await fetchJSON(apiUrl);
+
+  if (!r.success) return res.status(504).json(r);
+
+  const results = r.data?.result || [];
+
+  if (!Array.isArray(results) || results.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: "Video tidak ditemukan"
+    });
+  }
+
+  // 🔥 Ambil 5 hasil pertama
+  const videos = results.slice(0, 5).map(v => ({
+    title: v.title || "-",
+    author: v.author?.nickname || "-",
+    duration: v.duration || 0,
+    views: v.play_count || 0,
+    url: v.play || null
+  }));
+
+  // ✅ RESPON DEFAULT DINNS API
+  return sendResponse(
+    res,
+    "search",
+    "ttsearch",
+    "TikTok Search",
+    {
+      query: q,
+      total: results.length,
+      results: videos
+    },
+    r.ping
+  );
+}
+    // ===================================================
     // 🛠 TOOLS
     // ===================================================
     if (category === "tools" && name === "ssweb") {
