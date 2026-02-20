@@ -524,6 +524,87 @@ if (category === "search" && name === "ttsearch") {
   );
 }
     // ===================================================
+// 📖 SEARCH — SURAH QURAN
+// ===================================================
+if (category === "search" && name === "surah") {
+
+  const { surah } = req.query;
+
+  if (!surah) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter surah diperlukan"
+    });
+  }
+
+  const r = await fetchJSON(
+    `https://anabot.my.id/api/search/surah?surah=${encodeURIComponent(surah)}&apikey=freeApikey`
+  );
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.data?.result;
+
+  if (!result || result.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: "Surah tidak ditemukan"
+    });
+  }
+
+  return sendResponse(
+    res,
+    "search",
+    "surah",
+    "Quran Surah",
+    {
+      surah,
+      total_ayat: result.length,
+      ayat: result
+    },
+    r.ping
+  );
+}
+
+// ===================================================
+// 🕌 SEARCH — JADWAL SHOLAT
+// ===================================================
+if (category === "search" && name === "jadwalsholat") {
+
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q (kota) diperlukan"
+    });
+  }
+
+  const r = await fetchJSON(
+    `https://anabot.my.id/api/search/jadwalsholat?query=${encodeURIComponent(q)}&apikey=freeApikey`
+  );
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.data?.result;
+
+  if (!result) {
+    return res.status(404).json({
+      success: false,
+      error: "Jadwal tidak ditemukan"
+    });
+  }
+
+  return sendResponse(
+    res,
+    "search",
+    "jadwalsholat",
+    "Jadwal Sholat",
+    result,
+    r.ping
+  );
+}
+    // ===================================================
     // 🛠 TOOLS
     // ===================================================
     if (category === "tools" && name === "ssweb") {
