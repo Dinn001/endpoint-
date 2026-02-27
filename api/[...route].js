@@ -650,8 +650,7 @@ if (category === "tools" && name === "stokxl") {
   const clean = r.data
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, " ")
-  .replace(/\s+/g, " ");
+    .replace(/<[^>]*>/g, " ")  .replace(/\s+/g, " ");
 
   const idx = [...clean.matchAll(/XDA\d+/gi)].map(m => m.index);
   const data = [];
@@ -676,8 +675,8 @@ if (category === "tools" && name === "stokxl") {
 
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
-    // ===================================================
-// 📶 CEK KUOTA XL — PRO MAX FINAL 😎
+// ===================================================
+// 📶 CEK KUOTA XL — KMSp Store
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
@@ -694,64 +693,74 @@ if (category === "tools" && name === "cekxl") {
     });
   }
 
+  // 🔧 Normalisasi nomor
+  let num = number.replace(/\D/g, "");
+  if (num.startsWith("08")) num = "62" + num.slice(1);
+  if (num.startsWith("8")) num = "62" + num;
+
   const start = Date.now();
 
-  const response = await fetch(
-    "https://murakata.wuaze.com/cek-kuota.php",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Referer": "https://murakata.wuaze.com/",
-        "Origin": "https://murakata.wuaze.com"
-      },
+  try {
 
-      // 🔥 PARAMETER WAJIB
-      body: `nomor=${encodeURIComponent(number)}&i=1`
-      // i=1 = V1 XL
+    const response = await fetch(
+      "https://apigw.kmsp-store.com/sidompul/v4/cek_kuota?" +
+      new URLSearchParams({
+        msisdn: num,
+        isJSON: "true"
+      }),
+      {
+        method: "GET",
+        headers: {
+          "Authorization": "Basic c2lkb21wdWxhcGk6YXBpZ3drbXNw",
+          "X-API-Key": "60ef29aa-a648-4668-90ae-20951ef90c55",
+          "X-App-Version": "4.0.0",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "okhttp/4.9.0"
+        }
+      }
+    );
+
+    const json = await response.json();
+
+    if (json.status !== true) {
+      return res.status(400).json({
+        success: false,
+        error:
+          json?.data?.keteranganError ||
+          json?.message ||
+          "Gagal mengambil data"
+      });
     }
-  );
 
-  const html = await response.text();
+    const raw = json.data?.hasil || "Tidak ada informasi.";
 
-  // ======================
-  // CLEAN HTML → TEXT
-  // ======================
-  const clean = html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]*>/g, "\n")
-    .replace(/\n+/g, "\n")
-    .trim();
+    // 🔥 Bersihkan HTML
+    const clean = raw
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<b>/gi, "")
+      .replace(/<\/b>/gi, "")
+      .replace(/<[^>]*>?/gm, "")
+      .trim();
 
-  const pick = (label) => {
-    const m = clean.match(new RegExp(label + "\\s*:?\\s*(.+)", "i"));
-    return m ? m[1].trim() : null;
-  };
+    return sendResponse(
+      res,
+      "tools",
+      "cekxl",
+      "XL Checker",
+      {
+        number: num,
+        result: clean
+      },
+      Date.now() - start
+    );
 
-  const data = {
-    number,
-    operator: pick("Operator") || pick("Tipe Kartu"),
-    network: pick("Jaringan"),
-    verified: pick("ID Terverifikasi") || pick("Verif ID"),
-    card_age: pick("Umur Kartu"),
-    active_until: pick("Aktif Sampai") || pick("Masa Aktif"),
-    grace_period: pick("Masa Tenggang"),
-    raw_text: clean
-  };
-
-  return sendResponse(
-    res,
-    "tools",
-    "cekxl",
-    "XL Checker PRO MAX 😎",
-    data,
-    Date.now() - start
-  );
-}
-  
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: "Server error saat mengambil data",
+      detail: err.message
+    );
+  }
 //===============
     // 📥 DOWNLOAD
     // ===================================================
