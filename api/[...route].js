@@ -676,7 +676,8 @@ if (category === "tools" && name === "stokxl") {
   return sendResponse(res, "tools", "stokxl", null, data, r.ping);
 }
 // ===================================================
-// 📶 CEK KUOTA XL — KMSp Store
+// ===================================================
+// 📶 CEK KUOTA XL — KMSp SAFE MODE
 // ===================================================
 if (category === "tools" && name === "cekxl") {
 
@@ -693,7 +694,6 @@ if (category === "tools" && name === "cekxl") {
     });
   }
 
-  // 🔧 Normalisasi nomor
   let num = number.replace(/\D/g, "");
   if (num.startsWith("08")) num = "62" + num.slice(1);
   if (num.startsWith("8")) num = "62" + num;
@@ -711,18 +711,29 @@ if (category === "tools" && name === "cekxl") {
       {
         method: "GET",
         headers: {
-          "Authorization": "Basic c2lkb21wdWxhcGk6YXBpZ3drbXNw",
-          "X-API-Key": "60ef29aa-a648-4668-90ae-20951ef90c55",
+          "Authorization": "Basic c2lkb21wdWxhcGk6YXBpZ3drbXNw", // isi benar
+          "X-API-Key": "60ef29aa-a648-4668-90ae-20951ef90c55",            // isi benar
           "X-App-Version": "4.0.0",
-          "Content-Type": "application/x-www-form-urlencoded",
           "User-Agent": "okhttp/4.9.0"
         }
       }
     );
 
-    const json = await response.json();
+    // 🔥 AMAN — baca text dulu
+    const text = await response.text();
 
-    if (json.status !== true) {
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      return res.status(502).json({
+        success: false,
+        error: "Response bukan JSON",
+        raw: text.slice(0, 300)
+      });
+    }
+
+    if (!json.status) {
       return res.status(400).json({
         success: false,
         error:
@@ -734,7 +745,6 @@ if (category === "tools" && name === "cekxl") {
 
     const raw = json.data?.hasil || "Tidak ada informasi.";
 
-    // 🔥 Bersihkan HTML
     const clean = raw
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<b>/gi, "")
@@ -746,7 +756,7 @@ if (category === "tools" && name === "cekxl") {
       res,
       "tools",
       "cekxl",
-      "XL Checker",
+      "XL Checker KMSp",
       {
         number: num,
         result: clean
@@ -755,12 +765,15 @@ if (category === "tools" && name === "cekxl") {
     );
 
   } catch (err) {
+
     return res.status(500).json({
       success: false,
-      error: "Server error saat mengambil data",
+      error: "Server error",
       detail: err.message
-    );
+    });
+
   }
+}
 //===============
     // 📥 DOWNLOAD
     // ===================================================
