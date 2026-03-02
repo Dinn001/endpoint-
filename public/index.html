@@ -174,25 +174,72 @@ input{
 // ================= CONFIG =================
 
 const apiConfig = {
-  tools:{
-    cekxl:{desc:"Cek Kuota XL",params:["number"]},
-    ssweb:{desc:"Screenshot website",params:["url"]}
+    drama: {
+        search: { desc: "Cari drama berdasarkan judul", params: ["q"] },
+        episode: { desc: "Ambil daftar episode drama", params: ["id"] }
+    },
+    tools: {
+        unban: { desc: "Unban nomor WhatsApp", params: ["number"] },
+        ssweb: { desc: "Screenshot website", params: ["url"] },
+        stokxl: { desc: "Stok XL Akrab Global", params: [] },
+ cekxl: { desc: "Cek Kuota Xl Axia",params: ["number"] }
+    },
+    ai: {
+        chat: { desc: "AI chat sederhana", params: ["q"] },
+        cici: { desc: "AI Dinns", params: ["prompt"] },
+        perplexity: { desc: "AI Perplexity", params: ["prompt"] },
+        turboseek: { desc: "AI TurboSeek", params: ["prompt"] },
+        deepai: { desc: "AI DeepAI", params: ["prompt", "type"] }
+    },
+    search: {
+    youtube: {
+        desc: "Cari video YouTube",
+        params: ["q"]
+    },
+
+    pinterest: {
+        desc: "Cari gambar Pinterest",
+        params: ["q"]
+    },
+
+    ttsearch: {
+        desc: "Cari video TikTok",
+        params: ["q"]
+    },
+
+    gimage: {
+        desc: "Cari gambar Google Image",
+        params: ["q"]
+    },
+
+    jadwalsholat: {
+        desc: "Jadwal sholat berdasarkan kota",
+        params: ["q"]
+    },
+
+    surah: {
+        desc: "Ambil ayat Al-Quran berdasarkan nama surah",
+        params: ["surah"]
+    }
+},
+    sticker: {
+  brat: {
+    desc: "Generate sticker brat dari teks",
+    params: ["text"]
   },
-  search:{
-    youtube:{desc:"Cari video YouTube",params:["q"]},
-    pinterest:{desc:"Cari gambar Pinterest",params:["q"]},
-    ttsearch:{desc:"Cari video TikTok",params:["q"]},
-    jadwalsholat:{desc:"Jadwal sholat kota",params:["q"]},
-    surah:{desc:"Al-Quran Surah",params:["surah"]}
-  },
-  ai:{
-    chat:{desc:"AI chat sederhana",params:["q"]},
-    cici:{desc:"AI Cici",params:["prompt"]}
-  },
-  sticker:{
-    brat:{desc:"Sticker brat",params:["text"]},
-    emojimix:{desc:"Emoji mix",params:["emoji1","emoji2"]}
+
+  emojimix: {
+    desc: "Gabungkan dua emoji jadi sticker",
+    params: ["emoji1", "emoji2"]
   }
+},
+    download: {
+        gdrive: { desc: "Download file Google Drive", params: ["url"] },
+        facebook: { desc: "Download video Facebook / Reel", params: ["url"] },
+        instagram: { desc: "Download Instagram Post / Reel", params: ["url"] },
+        capcut: { desc: "Download Video Template CapCut", params: ["url"] },
+        tiktok: { desc: "Download video TikTok", params: ["url"] }
+    }
 };
 
 // ================= STATE =================
