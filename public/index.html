@@ -11,12 +11,12 @@
 *{box-sizing:border-box;font-family:'Inter',sans-serif}
 
 body{
-  margin:0;
-  background:linear-gradient(-45deg,#0b1020,#1e1b4b,#0f172a,#020617);
-  background-size:400% 400%;
-  animation:bgMove 18s ease infinite;
-  color:white;
-  min-height:100vh;
+margin:0;
+background:linear-gradient(-45deg,#0b1020,#1e1b4b,#0f172a,#020617);
+background-size:400% 400%;
+animation:bgMove 18s ease infinite;
+color:white;
+min-height:100vh;
 }
 
 @keyframes bgMove{
@@ -46,11 +46,6 @@ font-size:14px;
 outline:none;
 }
 
-input:focus{
-border-color:#8b5cf6;
-box-shadow:0 0 0 2px rgba(139,92,246,.25);
-}
-
 .category-scroll{
 display:flex;
 gap:12px;
@@ -63,8 +58,8 @@ padding:10px 18px;
 border-radius:24px;
 background:#0f172a;
 cursor:pointer;
-white-space:nowrap;
 border:1px solid rgba(139,92,246,.2);
+white-space:nowrap;
 }
 
 .category-btn.active{
@@ -77,7 +72,6 @@ border:none;
 
 .card{
 background:rgba(15,23,42,.85);
-backdrop-filter:blur(8px);
 border-radius:20px;
 padding:20px;
 margin-bottom:16px;
@@ -108,6 +102,17 @@ width:100%;
 margin-top:10px;
 }
 
+.request-box{
+background:#020617;
+padding:16px;
+border-radius:14px;
+border:1px solid rgba(139,92,246,.3);
+margin-top:14px;
+font-size:13px;
+word-break:break-all;
+position:relative;
+}
+
 .code{
 position:relative;
 background:#020617;
@@ -116,7 +121,6 @@ border-radius:14px;
 font-size:13px;
 margin-top:14px;
 white-space:pre-wrap;
-word-break:break-all;
 overflow:auto;
 border:1px solid rgba(139,92,246,.2);
 font-family:ui-monospace, monospace;
@@ -137,16 +141,6 @@ cursor:pointer;
 
 .back{cursor:pointer;margin-bottom:15px;color:#a78bfa}
 
-.request-info{
-background:#020617;
-padding:14px;
-border-radius:14px;
-border:1px solid rgba(139,92,246,.3);
-margin-top:14px;
-font-size:13px;
-line-height:1.6;
-}
-
 .toast{
 position:fixed;
 bottom:30px;
@@ -155,7 +149,6 @@ transform:translateX(-50%);
 background:#8b5cf6;
 padding:10px 16px;
 border-radius:12px;
-font-size:14px;
 opacity:0;
 transition:.3s;
 }
@@ -185,14 +178,13 @@ transition:.3s;
 <div id="toast" class="toast">Copied ✓</div>
 
 <script>
+
 const apiConfig = {
 search:{
 youtube:{desc:"Cari video YouTube",params:["q"]},
 pinterest:{desc:"Cari gambar Pinterest",params:["q"]},
 ttsearch:{desc:"Cari video TikTok",params:["q"]},
-gimage:{desc:"Cari gambar Google Image",params:["q"]},
-jadwalsholat:{desc:"Jadwal sholat",params:["q"]},
-surah:{desc:"Surah Al-Quran",params:["surah"]}
+gimage:{desc:"Cari gambar Google Image",params:["q"]}
 }
 };
 
@@ -206,21 +198,19 @@ const toast=document.getElementById("toast");
 let currentCategory="all";
 let searchText="";
 
-searchBox.oninput=e=>{
-searchText=e.target.value.toLowerCase();
-renderList(currentCategory);
-};
-
 function showToast(){
 toast.classList.add("show");
 setTimeout(()=>toast.classList.remove("show"),1500);
 }
 
-function copyById(id){
-navigator.clipboard.writeText(
-document.getElementById(id).innerText
-).then(showToast);
+function copyText(text){
+navigator.clipboard.writeText(text).then(showToast);
 }
+
+searchBox.oninput=e=>{
+searchText=e.target.value.toLowerCase();
+renderList(currentCategory);
+};
 
 function generateCategories(){
 categoryScroll.innerHTML="";
@@ -242,8 +232,7 @@ return btn;
 }
 
 function selectCategory(cat,el){
-document.querySelectorAll(".category-btn")
-.forEach(b=>b.classList.remove("active"));
+document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 el.classList.add("active");
 currentCategory=cat;
 renderList(cat);
@@ -267,8 +256,7 @@ card.className="card";
 card.innerHTML=`
 <div class="badge">GET</div>
 <div><b>${c.toUpperCase()} / ${ep}</b></div>
-<div class="desc">${data.desc}</div>
-`;
+<div class="desc">${data.desc}</div>`;
 card.onclick=()=>openDetail(c,ep);
 listView.appendChild(card);
 }
@@ -323,46 +311,31 @@ resultArea.innerHTML="Memproses...";
 try{
 
 const res=await fetch(url);
-const text=await res.text();
-
-let json;
-
-try{
-json=JSON.parse(text);
-}catch{
-resultArea.innerHTML=`
-<div class="code" style="color:#ff4444">
-⚠️ Server tidak mengembalikan JSON<br><br>${text}
-</div>`;
-return;
-}
+const json=await res.json();
 
 resultArea.innerHTML=`
 
-<div class="request-info">
-<b>Request Info</b><br>
-Method : GET<br>
-Category : ${c}<br>
-Endpoint : ${ep}<br>
-URL : ${url}
+<div class="request-box">
+<button class="copy-btn" onclick="copyText('${url}')">Copy</button>
+<b>REQUEST URL</b><br>
+${url}
 </div>
 
 <div class="code">
-<button class="copy-btn" onclick="copyById('resCode')">Copy</button>
-<b style="color:#8b5cf6">JSON RESPONSE:</b><br><br>
-<span id="resCode">${JSON.stringify(json,null,2)}</span>
+<button class="copy-btn" onclick="copyText(JSON.stringify(${JSON.stringify(json)},null,2))">Copy</button>
+<b style="color:#8b5cf6">JSON RESPONSE</b><br><br>
+${JSON.stringify(json,null,2)}
 </div>
 `;
 
 }catch(err){
-resultArea.innerHTML=
-`<div class="code" style="color:#ff4444">${err.message}</div>`;
+resultArea.innerHTML=`Error: ${err.message}`;
 }
 }
 
 generateCategories();
 renderList();
-</script>
 
+</script>
 </body>
 </html>
