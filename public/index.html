@@ -127,7 +127,11 @@ input{
 }
 
 .back{cursor:pointer;margin-bottom:15px;color:#a78bfa}
-
+.logo {
+  color: #8b5cf6;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(139,92,246,.8);
+}
 .toast{
   position:fixed;
   bottom:30px;
@@ -148,8 +152,9 @@ input{
 
 <body>
 
-<div class="header">Dinns API </></div>
-
+<div class="header">
+  <span class="logo">&lt;/&gt;</span> Dinns API
+</div>
 <div class="api-key-box">
   <input id="globalKey" placeholder="Global API Key">
   <input id="searchBox" placeholder="Search endpoint...">
