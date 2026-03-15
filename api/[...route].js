@@ -857,6 +857,47 @@ if (category === "tools" && name === "cekxl") {
         r.ping
       );
     }
+    // ===================================================
+// 📥 DOWNLOAD — SFILE
+// ===================================================
+if (category === "download" && name === "sfile") {
+
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter url diperlukan"
+    });
+  }
+
+  const r = await fetchJSON(
+    `https://api.yydz.biz.id/api/download/sfile?url=${encodeURIComponent(url)}&apikey=P5btAuX`
+  );
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.data || {};
+
+  const data = {
+    title: result.title || null,
+    size: result.size || null,
+    mimetype: result.mimetype || null,
+    creator: result.creator || null,
+    category: result.category || null,
+    upload_date: result.upload_date || null,
+    download: result.downloadUrl || null
+  };
+
+  return sendResponse(
+    res,
+    "download",
+    "sfile",
+    "Sfile Downloader",
+    data,
+    r.ping
+  );
+}
 
     if (category === "download" && name === "instagram") {
       const { url } = req.query;
