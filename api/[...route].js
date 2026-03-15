@@ -374,6 +374,51 @@ if (category === "search" && name === "pinterest") {
   );
 }
     // ===================================================
+// 🧪 TEST ENDPOINT (OWNER ONLY)
+// ===================================================
+if (category === "search" && name === "xnxx") {
+
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter q diperlukan"
+    });
+  }
+
+  const r = await fetchJSON(
+    `https://api.yydz.biz.id/api/nswf/xnxx/search?q=${encodeURIComponent(q)}&apikey=YOUR_API_KEY`
+  );
+
+  if (!r.success) return res.status(504).json(r);
+
+  const result = r.data?.data || [];
+
+  const data = result.map(v => ({
+    id: v.videoId,
+    url: v.videoUrl,
+    thumbnail: v.thumbnail,
+    author: v.uploaderName,
+    views: v.views,
+    duration: v.duration,
+    quality: v.resolution
+  }));
+
+  return sendResponse(
+    res,
+    "search",
+    "xnxx",
+    "Gacor",
+    {
+      query: q,
+      total: data.length,
+      results: data
+    },
+    r.ping
+  );
+}
+    // ===================================================
 // 🔎 SEARCH — GOOGLE IMAGE
 // ===================================================
 if (category === "search" && name === "gimage") {
