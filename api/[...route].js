@@ -388,7 +388,7 @@ if (category === "search" && name === "xnxx") {
   }
 
   const r = await fetchJSON(
-    `https://api.yydz.biz.id/api/nswf/xnxx/search?q=${encodeURIComponent(q)}&apikey=YOUR_API_KEY`
+    `https://api.yydz.biz.id/api/nswf/xnxx/search?q=${encodeURIComponent(q)}&apikey=P5btAuX`
   );
 
   if (!r.success) return res.status(504).json(r);
