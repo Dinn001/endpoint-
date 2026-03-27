@@ -215,7 +215,59 @@ if (category === "admin") {
     users
   });
 }
+// ===================================================
+// 🔊 AI — TEXT TO SPEECH (OMEGATECH)
+// ===================================================
+if (category === "ai" && name === "text-to-speech") {
 
+  const { text, voice } = req.query;
+
+  if (!text) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter text diperlukan"
+    });
+  }
+
+  const start = Date.now();
+
+  try {
+
+    const r = await fetchJSON(
+      `https://omegatech-api.dixonomega.tech/api/ai/text-to-speech?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voice || "Bella")}`
+    );
+
+    if (!r.status) {
+      return res.status(502).json({
+        success: false,
+        error: "Gagal generate suara"
+      });
+    }
+
+    const audio = r.result?.audio;
+
+    return sendResponse(
+      res,
+      "ai",
+      "tts",
+      "Text To Speech",
+      {
+        text,
+        voice: r.result?.voice,
+        length: r.result?.text_length,
+        audio
+      },
+      Date.now() - start
+    );
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      error: "Server error"
+    });
+  }
+    }
     // ===================================================
     // 🤖 CICI
     // ===================================================
