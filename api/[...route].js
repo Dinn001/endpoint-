@@ -702,6 +702,101 @@ if (category === "search" && name === "jadwalsholat") {
   );
 }
     // ===================================================
+// 📡 TOOLS — TRI CHECK
+// ===================================================
+if (category === "tools" && name === "tricek") {
+
+  let { number } = req.query;
+
+  if (!number) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter number diperlukan"
+    });
+  }
+
+  // normalize nomor
+  let msisdn = number.replace(/[^0-9]/g, '');
+
+  if (msisdn.startsWith('08')) {
+    msisdn = '62' + msisdn.slice(1);
+  }
+
+  const triPrefix = /^(6289[5-9])/;
+
+  if (!triPrefix.test(msisdn)) {
+    return res.status(400).json({
+      success: false,
+      error: "Nomor bukan SIM TRI (0895–0899)"
+    });
+  }
+
+  const start = Date.now();
+
+  try {
+
+    const response = await fetch("https://tri.co.id/api/v1/information/sim-status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0",
+        "Origin": "https://tri.co.id",
+        "Referer": "https://tri.co.id/"
+      },
+      body: JSON.stringify({
+        action: "MSISDN_STATUS_WEB",
+        input1: "",
+        input2: "",
+        language: "ID",
+        msisdn
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result?.status || result?.data?.responseCode !== "00000") {
+      return res.status(404).json({
+        success: false,
+        error: "Nomor tidak valid atau bukan SIM TRI"
+      });
+    }
+
+    const data = result.data;
+
+    // hitung sisa hari
+    const now = new Date();
+    const endDate = data.actEndDate ? new Date(data.actEndDate) : null;
+    const remainingDays = endDate && !isNaN(endDate)
+      ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)))
+      : null;
+
+    return sendResponse(
+      res,
+      "tools",
+      "tricheck",
+      "Tri SIM Check",
+      {
+        number: data.msisdn,
+        iccid: data.iccid,
+        card_status: data.cardStatus,
+        registration_status: data.activationStatus,
+        activation_date: data.activationDate,
+        expired_date: data.actEndDate,
+        remaining_days: remainingDays,
+        product: data.prodDesc,
+        region: data.retDistrict
+      },
+      Date.now() - start
+    );
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      error: "Server error"
+    });
+  }
+    // ===================================================
     // 🛠 TOOLS
     // ===================================================
     if (category === "tools" && name === "ssweb") {
