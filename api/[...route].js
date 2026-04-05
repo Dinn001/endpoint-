@@ -715,7 +715,6 @@ if (category === "tools" && name === "tricek") {
     });
   }
 
-  // normalize nomor
   let msisdn = number.replace(/[^0-9]/g, '');
 
   if (msisdn.startsWith('08')) {
@@ -763,9 +762,9 @@ if (category === "tools" && name === "tricek") {
 
     const data = result.data;
 
-    // hitung sisa hari
     const now = new Date();
     const endDate = data.actEndDate ? new Date(data.actEndDate) : null;
+
     const remainingDays = endDate && !isNaN(endDate)
       ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)))
       : null;
@@ -796,6 +795,7 @@ if (category === "tools" && name === "tricek") {
       error: "Server error"
     });
   }
+}
     // ===================================================
     // 🛠 TOOLS
     // ===================================================
