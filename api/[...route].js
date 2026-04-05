@@ -734,7 +734,57 @@ if (category === "search" && name === "jadwalsholat") {
 
       return sendResponse(res, "tools", "unban", null, r.data.data, r.ping);
     }
+// ===================================================
+// 🖼 TOOLS — REMINI (IMAGE ENHANCE)
+// ===================================================
+if (category === "tools" && name === "remini") {
 
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter url diperlukan"
+    });
+  }
+
+  const start = Date.now();
+
+  try {
+
+    const r = await fetchJSON(
+      `https://omegatech-api.dixonomega.tech/api/tools/remini?url=${encodeURIComponent(url)}`
+    );
+
+    if (!r.status) {
+      return res.status(502).json({
+        success: false,
+        error: "Gagal enhance gambar"
+      });
+    }
+
+    const result = r.result;
+
+    return sendResponse(
+      res,
+      "tools",
+      "remini",
+      "Remini Image Enhance",
+      {
+        original: url,
+        enhanced: result
+      },
+      Date.now() - start
+    );
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      error: "Server error"
+    });
+  }
+}
     // ===================================================
 // ===================================================
 // 📊 TOOLS — STOK XL (SCRAPING)
