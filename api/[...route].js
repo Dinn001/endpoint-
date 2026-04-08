@@ -19,7 +19,7 @@ function sendResponse(res, category, endpoint, model, data, ping = null) {
   return res.json({
     success: true,
     api: "Dinns API",
-    base_url: "https://endpoint-dinns.vercel.app",
+    base_url: "https://rest.api.dinns.my.id",
     category,
     endpoint,
     model: model || null,
