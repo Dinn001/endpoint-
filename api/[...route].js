@@ -1219,16 +1219,23 @@ const base64 = `data:image/png;base64,${btoa(
 // ===================================================
 // 📌 TRIAL VPN API
 // ===================================================
-
 if (category === "vpn" && name === "trial") {
 
   const { protocol, auth, timer } = req.query;
 
   // ✅ Validasi auth
-  if (!auth) {
+  if (!auth || auth.trim() === "") {
     return res.status(400).json({
       success: false,
-      error: "Parameter auth diperlukan"
+      error: "Parameter auth wajib diisi"
+    });
+  }
+
+  // ✅ Validasi timer
+  if (!timer || timer.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter timer wajib diisi"
     });
   }
 
@@ -1247,7 +1254,9 @@ if (category === "vpn" && name === "trial") {
     });
   }
 
-  if (!allowedProtocols.includes(protocol.toLowerCase())) {
+  const type = protocol.toLowerCase();
+
+  if (!allowedProtocols.includes(type)) {
     return res.status(400).json({
       success: false,
       error: "Protocol tidak valid",
@@ -1255,22 +1264,19 @@ if (category === "vpn" && name === "trial") {
     });
   }
 
-  // ⏳ Default timer
-  const time = timer || "1";
-
-  // 🌐 API URL
+  // 🌐 Endpoint asli
   const url =
-    `https://id.dinns.my.id/api/trial-${protocol.toLowerCase()}?auth=${encodeURIComponent(auth)}&timer=${encodeURIComponent(time)}`;
+    `https://id.dinns.my.id/api/trial-${type}?auth=${encodeURIComponent(auth)}&timer=${encodeURIComponent(timer)}`;
 
   try {
 
-    const r = await fetchJSON(url);
+    const r = await fetchJSON(url, 30000);
 
-    // ❌ Error API
+    // ❌ Jika gagal
     if (!r || r.status !== "success") {
       return res.status(504).json({
         success: false,
-        error: `Gagal membuat akun ${protocol.toUpperCase()}`,
+        error: `Gagal membuat akun ${type.toUpperCase()}`,
         result: r
       });
     }
@@ -1280,7 +1286,7 @@ if (category === "vpn" && name === "trial") {
       res,
       "vpn",
       "trial",
-      `Trial ${protocol.toUpperCase()}`,
+      `Trial ${type.toUpperCase()}`,
       r.data,
       r.ping || null
     );
@@ -1292,8 +1298,9 @@ if (category === "vpn" && name === "trial") {
       error: "Terjadi kesalahan server",
       message: e.message
     });
+
   }
-  }
+                                                                                       }
 // ===================================================
 // 😀 STICKER — EMOJIMIX
 // ===================================================
