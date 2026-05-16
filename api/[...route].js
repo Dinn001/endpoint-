@@ -103,23 +103,46 @@ async function fetchHTML(url, timeout = 14000) {
 // ======================
 // ⏱ FETCH JSON
 // ======================
-async function fetchJSON(url, timeout = 14000) {
+async function fetchJSON(url, timeout = 30000) {
   const start = Date.now();
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const res = await fetch(url, { signal: controller.signal });
-    const data = await res.json();
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
+      }
+    });
 
-    return { success: true, data, ping: Date.now() - start };
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return {
+        success: false,
+        error: "Response bukan JSON",
+        raw: text,
+        ping: Date.now() - start
+      };
+    }
+
+    return {
+      success: true,
+      data,
+      ping: Date.now() - start
+    };
 
   } catch (err) {
     return {
       success: false,
       error:
         err.name === "AbortError"
-          ? "Request timeout (>14s)"
+          ? `Request timeout (> ${timeout / 1000}s)`
           : err.message,
       ping: Date.now() - start
     };
@@ -1223,7 +1246,13 @@ if (category === "vpn" && name === "trial") {
 
   const { protocol, auth, timer } = req.query;
 
-  // ✅ Validasi auth
+  if (!protocol) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter protocol wajib diisi"
+    });
+  }
+
   if (!auth || auth.trim() === "") {
     return res.status(400).json({
       success: false,
@@ -1231,7 +1260,6 @@ if (category === "vpn" && name === "trial") {
     });
   }
 
-  // ✅ Validasi timer
   if (!timer || timer.trim() === "") {
     return res.status(400).json({
       success: false,
@@ -1239,77 +1267,49 @@ if (category === "vpn" && name === "trial") {
     });
   }
 
-  // ✅ Validasi protocol
-  const allowedProtocols = [
-    "vmess",
-    "vless",
-    "trojan",
-    "ssh"
-  ];
-
-  if (!protocol) {
-    return res.status(400).json({
-      success: false,
-      error: "Parameter protocol diperlukan"
-    });
-  }
-
   const type = protocol.toLowerCase();
+  const allowed = ["vmess", "vless", "trojan", "ssh"];
 
-  if (!allowedProtocols.includes(type)) {
+  if (!allowed.includes(type)) {
     return res.status(400).json({
       success: false,
       error: "Protocol tidak valid",
-      allowed: allowedProtocols
+      allowed
     });
   }
 
-  // 🌐 Endpoint asli
   const url =
     `https://id.dinns.my.id/api/trial-${type}?auth=${encodeURIComponent(auth)}&timer=${encodeURIComponent(timer)}`;
 
-  try {
+  const r = await fetchJSON(url, 30000);
 
-    const start = Date.now();
-
-const response = await fetch(url, {
-  headers: {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
-  }
-});
-
-const r = await response.json();
-r.ping = Date.now() - start;
-
-    // ❌ Jika gagal
-    if (!r || r.status !== "success") {
-      return res.status(504).json({
-        success: false,
-        error: `Gagal membuat akun ${type.toUpperCase()}`,
-        result: r
-      });
-    }
-
-    // ✅ Success
-    return sendResponse(
-      res,
-      "vpn",
-      "trial",
-      `Trial ${type.toUpperCase()}`,
-      r.data,
-      r.ping || null
-    );
-
-  } catch (e) {
-
-    return res.status(500).json({
+  if (!r.success) {
+    return res.status(504).json({
       success: false,
-      error: "Terjadi kesalahan server",
-      message: e.message
+      error: `Gagal konek ke server ${type.toUpperCase()}`,
+      result: r
     });
-
   }
+
+  const api = r.data;
+
+  if (!api || api.status !== "success") {
+    return res.status(504).json({
+      success: false,
+      error: `Gagal membuat akun ${type.toUpperCase()}`,
+      result: api
+    });
+  }
+
+  return sendResponse(
+    res,
+    "vpn",
+    "trial",
+    `Trial ${type.toUpperCase()}`,
+    api.data,
+    r.ping
+  );
+}
                                                                                        }
 // ===================================================
 // 😀 STICKER — EMOJIMIX
