@@ -1292,7 +1292,7 @@ if (category === "vpn" && name === "trial") {
       error: "Terjadi kesalahan server",
       message: e.message
     });
-
+  }
   }
 // ===================================================
 // 😀 STICKER — EMOJIMIX
