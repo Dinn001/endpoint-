@@ -1216,7 +1216,84 @@ const base64 = `data:image/png;base64,${btoa(
   );
 }
 
+// ===================================================
+// 📌 TRIAL VPN API
+// ===================================================
 
+if (category === "vpn" && name === "trial") {
+
+  const { protocol, auth, timer } = req.query;
+
+  // ✅ Validasi auth
+  if (!auth) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter auth diperlukan"
+    });
+  }
+
+  // ✅ Validasi protocol
+  const allowedProtocols = [
+    "vmess",
+    "vless",
+    "trojan",
+    "ssh"
+  ];
+
+  if (!protocol) {
+    return res.status(400).json({
+      success: false,
+      error: "Parameter protocol diperlukan"
+    });
+  }
+
+  if (!allowedProtocols.includes(protocol.toLowerCase())) {
+    return res.status(400).json({
+      success: false,
+      error: "Protocol tidak valid",
+      allowed: allowedProtocols
+    });
+  }
+
+  // ⏳ Default timer
+  const time = timer || "1";
+
+  // 🌐 API URL
+  const url =
+    `https://id.dinns.my.id/api/trial-${protocol.toLowerCase()}?auth=${encodeURIComponent(auth)}&timer=${encodeURIComponent(time)}`;
+
+  try {
+
+    const r = await fetchJSON(url);
+
+    // ❌ Error API
+    if (!r || r.status !== "success") {
+      return res.status(504).json({
+        success: false,
+        error: `Gagal membuat akun ${protocol.toUpperCase()}`,
+        result: r
+      });
+    }
+
+    // ✅ Success
+    return sendResponse(
+      res,
+      "vpn",
+      "trial",
+      `Trial ${protocol.toUpperCase()}`,
+      r.data,
+      r.ping || null
+    );
+
+  } catch (e) {
+
+    return res.status(500).json({
+      success: false,
+      error: "Terjadi kesalahan server",
+      message: e.message
+    });
+
+  }
 // ===================================================
 // 😀 STICKER — EMOJIMIX
 // ===================================================
