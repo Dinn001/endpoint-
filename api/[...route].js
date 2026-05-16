@@ -1270,7 +1270,17 @@ if (category === "vpn" && name === "trial") {
 
   try {
 
-    const r = await fetchJSON(url, 30000);
+    const start = Date.now();
+
+const response = await fetch(url, {
+  headers: {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json"
+  }
+});
+
+const r = await response.json();
+r.ping = Date.now() - start;
 
     // ❌ Jika gagal
     if (!r || r.status !== "success") {
