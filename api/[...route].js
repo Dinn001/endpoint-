@@ -99,9 +99,8 @@ async function fetchHTML(url, timeout = 14000) {
     clearTimeout(id);
   }
 }
-
 // ======================
-// ⏱ FETCH JSON
+// ⏱ FETCH JSON (Sempurna & Tangguh)
 // ======================
 async function fetchJSON(url, timeout = 30000) {
   const start = Date.now();
@@ -119,13 +118,25 @@ async function fetchJSON(url, timeout = 30000) {
 
     const text = await res.text();
 
+    // 🔴 PERBAIKAN 1: Cek status HTTP terlebih dahulu
+    if (!res.ok) {
+      return {
+        success: false,
+        error: `Server Error (HTTP ${res.status})`, // Memberitahu persis apakah error 404, 500, dll.
+        raw: text, // Menyimpan pesan error asli seperti "A server error..."
+        ping: Date.now() - start
+      };
+    }
+
     let data;
     try {
       data = JSON.parse(text);
     } catch {
+      // 🔴 PERBAIKAN 2: Pesan error di sini sekarang lebih spesifik
+      // Karena jika lolos ke sini, berarti HTTP Status-nya 200 (Sukses) tapi isinya bukan JSON valid
       return {
         success: false,
-        error: "Response bukan JSON",
+        error: "Server merespons sukses (200), tetapi format data bukan JSON",
         raw: text,
         ping: Date.now() - start
       };
@@ -147,7 +158,7 @@ async function fetchJSON(url, timeout = 30000) {
       ping: Date.now() - start
     };
   } finally {
-    clearTimeout(id);
+    clearTimeout(id); // Membersihkan timer agar tidak memory leak
   }
 }
 
