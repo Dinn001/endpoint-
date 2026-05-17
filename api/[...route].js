@@ -581,13 +581,18 @@ export default async function handler(req, res) {
       return sendResponse(res, "sticker", "emojimix", "Emoji Mix Generator", { emoji1, emoji2, image_base64: base64 }, Date.now() - start);
     }
 
-    // ===================================================
+        // ===================================================
     // ❌ DEFAULT NOT FOUND ROUTE
     // ===================================================
     return res.status(404).json({ success: false, error: "Endpoint not found", category, endpoint: name });
 
   } catch (err) {
-    console.error("API CRITICAL ERROR:", err);
+    // 🛠️ LOG DEBUGGING DI SINI
+    console.error("==========================================");
+    console.error("🚨 CRITICAL ERROR PADA RUTE:", req.query.route || `${category}/${name}`);
+    console.error("❌ PESAN EROR:", err.stack || err.message);
+    console.error("==========================================");
+    
     return res.status(500).json({ success: false, error: err.message || "Internal Server Error" });
   }
-}
+} // <--- Ini adalah tanda kurung kurawal penutup fungsi handler utama
