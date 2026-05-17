@@ -1,4 +1,4 @@
-import { getUser, supabase } from "../lib/database.js";
+import { getUser, supabase } from "./lib/database.js";
 
 // ======================
 // 🆔 RANDOM ID GENERATOR
