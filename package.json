@@ -1,7 +1,9 @@
 {
   "name": "dinns-api",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
     "cheerio": "^1.0.0"
   }
 }
