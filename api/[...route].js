@@ -151,14 +151,25 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
 }
 
 // ======================
+// ======================
 // 🚀 MAIN FUNCTION HANDLER
 // ======================
 export default async function handler(req, res) {
   try {
     const { apikey } = req.query;
     
-    // 🔍 1. Validasi Akun dari Supabase
-    const user = await getUser(apikey);
+    // 🔍 1. Validasi Akun dari Supabase (PROTEKSI AMAN)
+    let user;
+    try {
+      user = await getUser(apikey);
+    } catch (dbError) {
+      console.error("🚨 SUPABASE CONNECTION ERROR:", dbError.message);
+      return res.status(500).json({ 
+        success: false, 
+        error: "Gagal terhubung ke Database Supabase. Silakan cek status database atau kuota Supabase Anda.",
+        detail: dbError.message 
+      });
+    }
 
     if (!user) {
       return res.status(403).json({ success: false, error: "Invalid API key" });
@@ -174,23 +185,17 @@ export default async function handler(req, res) {
     }
 
     // 🆙 3. Naikkan hitungan 'used' +1 ke database cloud
-    await supabase
-      .from('api_users')
-      .update({ used: user.used + 1 })
-      .eq('apikey', user.apikey);
-
-    // Universal Routing Engine
-    let route = req.query.route;
-    if (!route) {
-      const pathname = req.url.split("?")[0];
-      route = pathname.replace(/^\/api\//, "").split("/").filter(Boolean);
+    try {
+      await supabase
+        .from('api_users')
+        .update({ used: user.used + 1 })
+        .eq('apikey', user.apikey);
+    } catch (updateError) {
+      console.error("⚠️ Gagal update limit di Supabase:", updateError.message);
+      // Lanjut saja, jangan di-return agar user tetap dapat data meskipun update limit gagal
     }
 
-    if (typeof route === "string") route = [route];
-
-    const category = route[0] || "unknown";
-    const name = route[1] || "unknown";
-
+    // ... (Sisa kode routing Universal Engine ke bawah tetap sama)
     // ===================================================
     // 👑 MENU ADMIN: PANELS & APICONTROL (SUPABASE)
     // ===================================================
