@@ -92,7 +92,7 @@ async function fetchHTML(url, timeout = 9000) {
 }
 
 // ======================
-// ⏱ FETCH JSON (Defensif - Kebal Error HTML Target)
+// ⏱ FETCH JSON (Super Defensif — Anti-Crash Teks/HTML Target)
 // ======================
 async function fetchJSON(url, timeout = 9000, options = {}) {
   const start = Date.now();
@@ -115,27 +115,29 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
     const text = await res.text();
     const cleanText = text.trim();
 
-    // 🛡️ PROTEKSI ANTI 'T': Cek fisik teks sebelum dipaksa masuk ke JSON.parse
-    if (!cleanText.startsWith('{') && !cleanText.startsWith('[')) {
+    // 🛡️ PROTEKSI TOTAL: Uji coba parsing menggunakan blok try-catch lokal
+    try {
+      const data = JSON.parse(cleanText);
+      
+      if (!res.ok) {
+        return {
+          success: false,
+          error: `Target Server Error (HTTP ${res.status})`,
+          raw_snippet: cleanText.slice(0, 150),
+          ping: Date.now() - start
+        };
+      }
+
+      return { success: true, data, ping: Date.now() - start };
+    } catch (parseError) {
+      // Jika gagal di-parse menjadi JSON, tangkap teks aslinya agar tidak bikin server crash
       return {
         success: false,
-        error: "Target API mengirim data HTML/Teks biasa (Kemungkinan down atau diblokir).",
-        raw_snippet: cleanText.slice(0, 120),
+        error: "Target API mengirimkan respon Teks/HTML biasa, bukan JSON (Kemungkinan API tersebut sedang down/error).",
+        raw_snippet: cleanText.slice(0, 200), // Mengambil 200 karakter pertama teks errornya
         ping: Date.now() - start
       };
     }
-
-    if (!res.ok) {
-      return {
-        success: false,
-        error: `Server Error (HTTP ${res.status})`,
-        raw_snippet: cleanText.slice(0, 100),
-        ping: Date.now() - start
-      };
-    }
-
-    const data = JSON.parse(cleanText);
-    return { success: true, data, ping: Date.now() - start };
 
   } catch (err) {
     return {
