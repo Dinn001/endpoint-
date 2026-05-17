@@ -1,7 +1,7 @@
-import { API_USERS } from "../lib/database.js";
+import { getUser, supabase } from "../lib/database.js";
 
 // ======================
-// 🆔 RANDOM ID
+// 🆔 RANDOM ID GENERATOR
 // ======================
 function generateId(length = 16) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -13,7 +13,7 @@ function generateId(length = 16) {
 }
 
 // ======================
-// 📦 RESPONSE FORMAT
+// 📦 RESPONSE FORMAT STANDARD
 // ======================
 function sendResponse(res, category, endpoint, model, data, ping = null) {
   return res.json({
@@ -92,7 +92,7 @@ async function fetchHTML(url, timeout = 9000) {
 }
 
 // ======================
-// ⏱ FETCH JSON (Defensif & Aman dari Error 'T')
+// ⏱ FETCH JSON (Defensif - Kebal Error HTML Target)
 // ======================
 async function fetchJSON(url, timeout = 9000, options = {}) {
   const start = Date.now();
@@ -115,11 +115,11 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
     const text = await res.text();
     const cleanText = text.trim();
 
-    // 🛡️ CEK FISIK STRUKTUR TEKS: Cegah paksaan JSON.parse() jika isinya teks HTML "The page..."
+    // 🛡️ PROTEKSI ANTI 'T': Cek fisik teks sebelum dipaksa masuk ke JSON.parse
     if (!cleanText.startsWith('{') && !cleanText.startsWith('[')) {
       return {
         success: false,
-        error: "Target API tidak mengembalikan JSON valid. Kemungkinan down atau terblokir Cloudflare.",
+        error: "Target API mengirim data HTML/Teks biasa (Kemungkinan down atau diblokir).",
         raw_snippet: cleanText.slice(0, 120),
         ping: Date.now() - start
       };
@@ -128,7 +128,7 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
     if (!res.ok) {
       return {
         success: false,
-        error: `Server Error (HTTP Status ${res.status})`,
+        error: `Server Error (HTTP ${res.status})`,
         raw_snippet: cleanText.slice(0, 100),
         ping: Date.now() - start
       };
@@ -149,24 +149,35 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
 }
 
 // ======================
-// 🚀 HANDLER MAIN
+// 🚀 MAIN FUNCTION HANDLER
 // ======================
 export default async function handler(req, res) {
   try {
     const { apikey } = req.query;
-    const user = API_USERS[apikey];
+    
+    // 🔍 1. Validasi Akun dari Supabase
+    const user = await getUser(apikey);
 
     if (!user) {
       return res.status(403).json({ success: false, error: "Invalid API key" });
     }
 
-    if (user.limit !== Infinity && user.used >= user.limit) {
+    if (!user.active) {
+      return res.status(403).json({ success: false, error: "API key kamu telah dinonaktifkan oleh Admin." });
+    }
+
+    // 📊 2. Validasi Limit (999999 = Pengganti nilai Infinity untuk Owner)
+    if (user.limit !== 999999 && user.used >= user.limit) {
       return res.status(429).json({ success: false, error: "Limit penggunaan habis" });
     }
 
-    user.used++;
+    // 🆙 3. Naikkan hitungan 'used' +1 ke database cloud
+    await supabase
+      .from('api_users')
+      .update({ used: user.used + 1 })
+      .eq('apikey', user.apikey);
 
-    // Universal Routing
+    // Universal Routing Engine
     let route = req.query.route;
     if (!route) {
       const pathname = req.url.split("?")[0];
@@ -177,6 +188,80 @@ export default async function handler(req, res) {
 
     const category = route[0] || "unknown";
     const name = route[1] || "unknown";
+
+    // ===================================================
+    // 👑 MENU ADMIN: PANELS & APICONTROL (SUPABASE)
+    // ===================================================
+    if (category === "admin") {
+      if (user.role !== "owner") {
+        return res.status(401).json({ success: false, error: "Unauthorized. Menu khusus owner." });
+      }
+
+      // SUB-MENU: ADD / UPDATE USER
+      if (name === "add") {
+        const { target_key, name: target_name, limit: target_limit, role: target_role } = req.query;
+
+        if (!target_key || !target_name) {
+          return res.status(400).json({ success: false, error: "Parameter 'target_key' dan 'name' wajib diisi." });
+        }
+
+        const parsedLimit = target_role === "owner" ? 999999 : (parseInt(target_limit) || 100);
+
+        const { error } = await supabase
+          .from('api_users')
+          .upsert({
+            apikey: target_key.trim(),
+            name: target_name.trim(),
+            role: target_role || 'user',
+            limit: parsedLimit,
+            used: 0,
+            active: true
+          }, { onConflict: 'apikey' });
+
+        if (error) return res.status(500).json({ success: false, error: "Supabase Write Error", detail: error.message });
+
+        return res.json({ 
+          success: true, 
+          message: `API Key '${target_key}' berhasil dikonfigurasi!`,
+          data: { apikey: target_key, name: target_name, limit: parsedLimit >= 999999 ? "Unlimited" : parsedLimit, role: target_role || 'user' }
+        });
+      }
+
+      // SUB-MENU: HAPUS USER
+      if (name === "delete") {
+        const { target_key } = req.query;
+        if (!target_key) return res.status(400).json({ success: false, error: "Parameter 'target_key' wajib dicantumkan." });
+
+        if (target_key === apikey) {
+          return res.status(400).json({ success: false, error: "Sistem memblokir permintaan hapus key owner diri sendiri!" });
+        }
+
+        const { error } = await supabase
+          .from('api_users')
+          .delete()
+          .eq('apikey', target_key.trim());
+
+        if (error) return res.status(500).json({ success: false, error: "Supabase Delete Error", detail: error.message });
+
+        return res.json({ success: true, message: `API Key '${target_key}' telah dihapus dari cloud database.` });
+      }
+
+      // DEFAULT LIST ALL USERS
+      const { data: allUsers, error } = await supabase.from('api_users').select('*');
+      if (error) return res.status(500).json({ success: false, error: "Supabase Read Error" });
+
+      const list = allUsers.map(u => ({
+        apikey: u.apikey,
+        name: u.name,
+        role: u.role,
+        limit: u.limit >= 999999 ? "Unlimited" : u.limit,
+        used: u.used,
+        remaining: u.limit >= 999999 ? "Unlimited" : Math.max(0, u.limit - u.used),
+        status: u.active ? "Aktif" : "Banned"
+      }));
+
+      return res.json({ success: true, total_users: list.length, users: list });
+    }
 
     // ===================================================
     // 🤖 AI CHAT (LOCAL)
