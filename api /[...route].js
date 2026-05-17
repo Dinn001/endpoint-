@@ -103,35 +103,37 @@ async function fetchJSON(url, timeout = 30000) {
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36",
         "Accept": "application/json"
       }
     });
 
     const text = await res.text();
+    const cleanText = text.trim();
+
+    // 🔥 VALIDASI UTAMA: Cek apakah teks ini valid berformat JSON (Diawali { atau [)
+    if (!cleanText.startsWith('{') && !cleanText.startsWith('[')) {
+      return {
+        success: false,
+        error: "Server target tidak merespons dengan JSON (Kemungkinan Down/Pindah Halaman)",
+        raw: cleanText.slice(0, 200), // Ambil 200 karakter pertama teks errornya untuk debug
+        ping: Date.now() - start
+      };
+    }
 
     if (!res.ok) {
       return {
         success: false,
         error: `Server Error (HTTP ${res.status})`,
-        raw: text,
+        raw: cleanText.slice(0, 150),
         ping: Date.now() - start
       };
     }
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return {
-        success: false,
-        error: "Server merespons sukses (200), tetapi format data bukan JSON",
-        raw: text,
-        ping: Date.now() - start
-      };
-    }
-
+    // Aman untuk di-parse karena sudah divalidasi di atas
+    const data = JSON.parse(cleanText);
     return { success: true, data, ping: Date.now() - start };
+
   } catch (err) {
     return {
       success: false,
@@ -142,7 +144,6 @@ async function fetchJSON(url, timeout = 30000) {
     clearTimeout(id);
   }
 }
-
 // ======================
 // 🚀 HANDLER MAIN
 // ======================
