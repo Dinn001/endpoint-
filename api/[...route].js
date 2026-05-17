@@ -92,7 +92,7 @@ async function fetchHTML(url, timeout = 9000) {
 }
 
 // ======================
-// ⏱ FETCH JSON (Defensif & Aman dari Error 'T')
+// ⏱ FETCH JSON (Super Defensif — Kebal Error Teks/HTML Target)
 // ======================
 async function fetchJSON(url, timeout = 9000, options = {}) {
   const start = Date.now();
@@ -115,27 +115,29 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
     const text = await res.text();
     const cleanText = text.trim();
 
-    // 🛡️ CEK FISIK STRUKTUR TEKS: Cegah paksaan JSON.parse() jika isinya teks HTML "The page..."
-    if (!cleanText.startsWith('{') && !cleanText.startsWith('[')) {
+    // 🛡️ Uji coba parsing aman menggunakan try-catch lokal
+    try {
+      const data = JSON.parse(cleanText);
+      
+      if (!res.ok) {
+        return {
+          success: false,
+          error: `Target Server Error (HTTP ${res.status})`,
+          raw_snippet: cleanText.slice(0, 150),
+          ping: Date.now() - start
+        };
+      }
+
+      return { success: true, data, ping: Date.now() - start };
+    } catch (parseError) {
+      // Menangkap respon HTML/Teks biasa jika API target down atau terblokir Cloudflare
       return {
         success: false,
-        error: "Target API tidak mengembalikan JSON valid. Kemungkinan down atau terblokir Cloudflare.",
-        raw_snippet: cleanText.slice(0, 120),
+        error: "Target API mengirimkan respon Teks/HTML biasa, bukan JSON valid.",
+        raw_snippet: cleanText.slice(0, 200),
         ping: Date.now() - start
       };
     }
-
-    if (!res.ok) {
-      return {
-        success: false,
-        error: `Server Error (HTTP Status ${res.status})`,
-        raw_snippet: cleanText.slice(0, 100),
-        ping: Date.now() - start
-      };
-    }
-
-    const data = JSON.parse(cleanText);
-    return { success: true, data, ping: Date.now() - start };
 
   } catch (err) {
     return {
@@ -409,7 +411,7 @@ export default async function handler(req, res) {
     }
 
     // ===================================================
-    // 📡 TOOLS — TRI CHECK (MENGGUNAKAN AMAN NYA PROTEKSI JSON)
+    // 📡 TOOLS — TRI CHECK
     // ===================================================
     if (category === "tools" && name === "tricek") {
       let { number } = req.query;
