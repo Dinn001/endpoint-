@@ -111,12 +111,12 @@ async function fetchJSON(url, timeout = 30000) {
     const text = await res.text();
     const cleanText = text.trim();
 
-    // 🔥 VALIDASI UTAMA: Cek apakah teks ini valid berformat JSON (Diawali { atau [)
+    // 🛡️ PROTEKSI UTAMA: Cek apakah karakter pertama adalah tanda JSON ({ atau [)
     if (!cleanText.startsWith('{') && !cleanText.startsWith('[')) {
       return {
         success: false,
-        error: "Server target tidak merespons dengan JSON (Kemungkinan Down/Pindah Halaman)",
-        raw: cleanText.slice(0, 200), // Ambil 200 karakter pertama teks errornya untuk debug
+        error: "Server target tidak merespons dengan JSON valid (Kemungkinan Down/Maintenance)",
+        raw_snippet: cleanText.slice(0, 150), // Menampilkan "The page c..." agar kamu tahu isi aslinya
         ping: Date.now() - start
       };
     }
@@ -125,12 +125,12 @@ async function fetchJSON(url, timeout = 30000) {
       return {
         success: false,
         error: `Server Error (HTTP ${res.status})`,
-        raw: cleanText.slice(0, 150),
+        raw_snippet: cleanText.slice(0, 100),
         ping: Date.now() - start
       };
     }
 
-    // Aman untuk di-parse karena sudah divalidasi di atas
+    // Dijamin aman dari "Unexpected token" karena sudah divalidasi di atas
     const data = JSON.parse(cleanText);
     return { success: true, data, ping: Date.now() - start };
 
@@ -144,6 +144,7 @@ async function fetchJSON(url, timeout = 30000) {
     clearTimeout(id);
   }
 }
+
 // ======================
 // 🚀 HANDLER MAIN
 // ======================
