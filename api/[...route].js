@@ -157,7 +157,7 @@ async function fetchJSON(url, timeout = 9000, options = {}) {
 export default async function handler(req, res) {
   try {
     const { apikey } = req.query;
-    
+console.log("🔑 API KEY YANG DITERIMA SERVER VERCEL:", apikey);
     // 🔍 1. Validasi Akun dari Supabase (PROTEKSI AMAN)
     let user;
     try {
